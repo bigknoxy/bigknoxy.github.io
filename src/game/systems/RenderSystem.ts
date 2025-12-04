@@ -206,7 +206,6 @@ export class RenderSystem {
   public drawFPS(fps: number): void {
     if (!this.config.showFPS) return;
 
-    const ctx = this.backBuffer || this.ctx;
     this.drawText(`FPS: ${Math.round(fps)}`, this.width - 80, 10, {
       color: "#306230",
       size: 10,

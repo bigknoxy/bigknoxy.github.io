@@ -3,7 +3,7 @@
  */
 
 import { Entity } from "./Entity";
-import type { PlayerConfig, Vector2D, BoundingBox } from "../types/GameTypes";
+import type { PlayerConfig, BoundingBox } from "../types/GameTypes";
 
 export class Player extends Entity {
   public jumpPower: number;

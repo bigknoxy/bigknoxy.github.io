@@ -21,7 +21,6 @@ import type {
 } from "./types/GameTypes";
 
 export class GameEngine {
-  private canvas: HTMLCanvasElement;
   private ctx: CanvasRenderingContext2D;
   private config: GameEngineConfig;
   private state: GameState;
@@ -54,7 +53,6 @@ export class GameEngine {
   private onScoreChangeCallback?: (score: number) => void;
 
   constructor(config: GameEngineConfig) {
-    this.canvas = config.canvas;
     this.ctx = config.canvas.getContext("2d")!;
     this.config = config;
     this.onScoreChangeCallback = config.onScoreChange;
