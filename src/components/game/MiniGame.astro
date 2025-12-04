@@ -1,43 +1,305 @@
 ---
-// MiniGame.astro - Lazy-loadable game component stub
+// MiniGame.astro
+// SSR-safe Astro component that lazy-loads the GameEngine on visibility or user gesture
 ---
 
-<div id="game-container" class="w-full max-w-2xl mx-auto bg-tokyo-surface border-2 border-gameboy-light rounded-lg p-4">
-  <div class="aspect-square bg-gameboy-darkest rounded relative">
-    <canvas id="game-canvas" class="w-full h-full rounded"></canvas>
-    
-    <!-- Game UI Overlay -->
-    <div class="absolute bottom-4 left-4 right-4 flex justify-between items-center">
-      <div class="text-gameboy-lightest font-pixel text-sm">
-        <span id="score">SCORE: 0000</span>
+<div id="mini-game-root" class="game-container w-full max-w-2xl mx-auto p-4" role="region" aria-label="Code Runner mini game">
+  <!-- SSR fallback / placeholder -->
+  <div class="bg-tokyo-surface border-2 border-gameboy-light rounded-lg p-4 text-center">
+    <div class="mx-auto max-w-xs">
+      <div class="game-screen bg-gameboy-darkest rounded relative mx-auto" style="width:100%;">
+        <canvas id="mini-game-canvas" width="240" height="216" aria-hidden="true" class="pixel-perfect w-full h-auto mx-auto block" style="aspect-ratio: 240 / 216;"></canvas>
+
+        <div id="mini-game-overlay" class="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
+          <div class="bg-black/60 text-gameboy-lightest font-pixel p-3 rounded pointer-events-auto">
+            LOADING
+          </div>
+          <button id="mini-game-cta" class="mt-3 pointer-events-auto px-4 py-2 bg-gameboy-light text-gameboy-darkest font-pixel text-sm rounded hover:bg-gameboy-lightest focus:outline-none" aria-label="Load and start game">Start Game</button>
+        </div>
       </div>
-      <div class="flex gap-2">
-        <button id="game-start" class="px-3 py-1 bg-gameboy-light text-gameboy-darkest font-pixel text-xs rounded hover:bg-gameboy-lightest transition-colors">
-          START
-        </button>
-        <button id="game-pause" class="px-3 py-1 bg-gameboy-light text-gameboy-darkest font-pixel text-xs rounded hover:bg-gameboy-lightest transition-colors">
-          PAUSE
-        </button>
+
+      <div class="mt-4 flex items-center justify-between">
+        <div class="text-gameboy-lightest font-pixel text-sm" aria-live="polite">
+          <span id="mini-game-score">SCORE: 0000</span>
+        </div>
+
+        <div class="flex items-center gap-2">
+          <button id="mini-game-start" class="px-3 py-1 bg-gameboy-light text-gameboy-darkest font-pixel text-xs rounded hover:bg-gameboy-lightest focus:outline-none" aria-pressed="false">Start</button>
+          <button id="mini-game-pause" class="px-3 py-1 bg-gameboy-light text-gameboy-darkest font-pixel text-xs rounded hover:bg-gameboy-lightest focus:outline-none" aria-pressed="false">Pause</button>
+          <button id="mini-game-mute" class="px-2 py-1 bg-gameboy-light text-gameboy-darkest font-pixel text-xs rounded hover:bg-gameboy-lightest focus:outline-none" aria-pressed="false">Mute</button>
+          <label for="mini-game-volume" class="sr-only">Volume</label>
+          <input id="mini-game-volume" type="range" min="0" max="1" step="0.01" value="0.3" class="w-24" aria-label="Game volume">
+        </div>
       </div>
+
+      <div class="mt-2 text-tokyo-muted text-sm">Keyboard: Space to jump • P to pause • Touch: tap to jump</div>
     </div>
-  </div>
-  
-  <!-- Game Controls Info -->
-  <div class="mt-4 text-center text-tokyo-muted text-sm">
-    Use arrow keys to move • Space to action • P to pause
   </div>
 </div>
 
-<script>
-  // Game logic will be implemented here
-  // This is a stub for the actual game implementation
-  
-  // TODO: Implement game engine with:
-  // - Canvas rendering loop
-  // - Game state management
-  // - Input handling
-  // - Sound effects using Web Audio API
-  // - 8-bit style graphics and animations
-  
-  console.log('MiniGame component loaded - game logic to be implemented');
+<script is:inline type="module">
+  // Client-only logic: lazy-load GameEngine on visibility or user gesture
+  (function () {
+    if (typeof window === 'undefined') return;
+
+    var ROOT_ID = 'mini-game-root';
+    var CANVAS_ID = 'mini-game-canvas';
+    var CTA_ID = 'mini-game-cta';
+    var START_ID = 'mini-game-start';
+    var PAUSE_ID = 'mini-game-pause';
+    var MUTE_ID = 'mini-game-mute';
+    var VOLUME_ID = 'mini-game-volume';
+    var SCORE_ID = 'mini-game-score';
+
+    var root = document.getElementById(ROOT_ID);
+    var canvas = document.getElementById(CANVAS_ID);
+    var cta = document.getElementById(CTA_ID);
+    var startBtn = document.getElementById(START_ID);
+    var pauseBtn = document.getElementById(PAUSE_ID);
+    var muteBtn = document.getElementById(MUTE_ID);
+    var volumeEl = document.getElementById(VOLUME_ID);
+    var scoreEl = document.getElementById(SCORE_ID);
+
+    if (!root || !canvas) return;
+
+    // State
+    var engine = null;
+    var engineReady = false;
+    var loading = false;
+
+    // Helper to dispatch custom events from root
+    function dispatchGameEvent(name, detail) {
+      if (detail === void 0) { detail = {}; }
+      var ev = new CustomEvent(name, { detail: detail });
+      root.dispatchEvent(ev);
+      // also store last event for tests
+      try { window.__lastMiniGameEvent = { name: name, detail: detail, time: Date.now() }; } catch (e) {}
+    }
+
+    // Setup a small API surface on window for programmatic control
+    function exposeAPI(engineInstance) {
+      var api = {
+        start: function () { return engineInstance && typeof engineInstance.start === 'function' && engineInstance.start(); },
+        pause: function () { return engineInstance && typeof engineInstance.pause === 'function' && engineInstance.pause(); },
+        reset: function () { return engineInstance && typeof engineInstance.reset === 'function' && engineInstance.reset(); },
+        getScore: function () { return engineInstance && typeof engineInstance.getScore === 'function' ? engineInstance.getScore() : 0; },
+        setScore: function (s) { return engineInstance && typeof engineInstance.setScore === 'function' && engineInstance.setScore(s); },
+        setSoundEnabled: function (enabled) {
+          var audio = engineInstance && typeof engineInstance.getAudioSystem === 'function' && engineInstance.getAudioSystem();
+          if (audio) {
+            if (enabled && typeof audio.unmute === 'function') audio.unmute();
+            if (!enabled && typeof audio.mute === 'function') audio.mute();
+          }
+        },
+        getHighScore: function () { return engineInstance && typeof engineInstance.getHighScore === 'function' ? engineInstance.getHighScore() : 0; },
+        resetHighScore: function () { return engineInstance && typeof engineInstance.resetHighScore === 'function' && engineInstance.resetHighScore(); },
+        isPlaying: function () { return engineInstance && typeof engineInstance.isPlaying === 'function' ? engineInstance.isPlaying() : false; },
+        isPaused: function () { return engineInstance && typeof engineInstance.isPaused === 'function' ? engineInstance.isPaused() : false; },
+        setGameSpeed: function (s) { return engineInstance && typeof engineInstance.setGameSpeed === 'function' && engineInstance.setGameSpeed(s); },
+        setScoreChangeCallback: function (cb) { return engineInstance && typeof engineInstance.setScoreChangeCallback === 'function' && engineInstance.setScoreChangeCallback(cb); },
+        raw: engineInstance,
+      };
+      try { window.miniGame = api; } catch (e) {}
+    }
+
+    // Wire engine to UI controls
+    function wireControls() {
+      if (!engine) return;
+
+      // Update score UI via callback
+      if (engine && typeof engine.setScoreChangeCallback === 'function') {
+        engine.setScoreChangeCallback(function (score) {
+          if (scoreEl) scoreEl.textContent = "SCORE: " + String(score).padStart(4, '0');
+          dispatchGameEvent('game:score', { score: score });
+        });
+      }
+
+      if (engine && typeof engine.addEventListener === 'function') {
+        engine.addEventListener('gamestart', function (e) { dispatchGameEvent('game:start', e); });
+        engine.addEventListener('pause', function (e) { dispatchGameEvent('game:pause', e); });
+        engine.addEventListener('gameover', function (e) { dispatchGameEvent('game:gameover', e); });
+        engine.addEventListener('collect', function (e) { dispatchGameEvent('game:collect', e); });
+      }
+
+      if (startBtn) startBtn.addEventListener('click', function () {
+        if (engine && typeof engine.isPlaying === 'function' && engine.isPlaying()) {
+          if (typeof engine.stop === 'function') engine.stop();
+          startBtn.textContent = 'Start';
+          startBtn.setAttribute('aria-pressed', 'false');
+        } else {
+          if (typeof engine.start === 'function') engine.start();
+          startBtn.textContent = 'Stop';
+          startBtn.setAttribute('aria-pressed', 'true');
+        }
+      });
+
+      if (pauseBtn) pauseBtn.addEventListener('click', function () {
+        if (typeof engine.pause === 'function') engine.pause();
+        var pressed = engine && typeof engine.isPaused === 'function' ? !!engine.isPaused() : false;
+        pauseBtn.setAttribute('aria-pressed', String(pressed));
+        pauseBtn.textContent = pressed ? 'Resume' : 'Pause';
+      });
+
+      if (muteBtn) muteBtn.addEventListener('click', function () {
+        var audio = engine && typeof engine.getAudioSystem === 'function' && engine.getAudioSystem();
+        if (!audio) return;
+        if (typeof audio.isEnabled === 'function' && audio.isEnabled()) {
+          audio.mute && audio.mute();
+          muteBtn.setAttribute('aria-pressed', 'true');
+          muteBtn.textContent = 'Muted';
+        } else {
+          audio.unmute && audio.unmute();
+          muteBtn.setAttribute('aria-pressed', 'false');
+          muteBtn.textContent = 'Mute';
+        }
+      });
+
+      if (volumeEl) volumeEl.addEventListener('input', function (ev) {
+        var v = parseFloat(ev.target.value || '0.3');
+        var audio = engine && typeof engine.getAudioSystem === 'function' && engine.getAudioSystem();
+        if (audio && typeof audio.setVolume === 'function') audio.setVolume(v);
+      });
+
+      // Keyboard handlers
+      window.addEventListener('keydown', function (e) {
+        if (!engine) return;
+        if (e.code === 'Space') {
+          e.preventDefault();
+          if (engine.inputHandler && typeof engine.inputHandler.trigger === 'function') {
+            engine.inputHandler.trigger('space');
+          } else if (engine.raw && engine.raw.player && typeof engine.raw.player.jump === 'function') {
+            engine.raw.player.jump();
+          }
+        }
+        if (e.key === 'p' || e.key === 'P') {
+          if (typeof engine.pause === 'function') engine.pause();
+        }
+      });
+
+      // Touch / tap to jump
+      canvas.addEventListener('touchstart', function (e) {
+        e.preventDefault();
+        if (engine && engine.inputHandler && typeof engine.inputHandler.trigger === 'function') engine.inputHandler.trigger('space');
+      }, { passive: false });
+
+      // Click to jump as well when user taps the canvas area
+      canvas.addEventListener('click', function () {
+        if (engine && engine.inputHandler && typeof engine.inputHandler.trigger === 'function') engine.inputHandler.trigger('space');
+      });
+    }
+
+    // Dynamic import of GameEngine and initialization
+    function loadEngine() {
+      if (engineReady || loading) return Promise.resolve();
+      loading = true;
+      return import('/src/game/GameEngine')
+        .then(function (module) {
+          var GameEngine = module.GameEngine || module.default;
+          var vol = '0.3';
+          try { if (volumeEl && typeof volumeEl.value === 'string') vol = volumeEl.value; } catch (e) {}
+          var config = {
+            width: 240,
+            height: 216,
+            targetFPS: 60,
+            gravity: 0.8,
+            jumpPower: -12,
+            gameSpeed: 4,
+            spawnRate: 0.02,
+            canvas: canvas,
+            audio: {
+              enabled: true,
+              volume: parseFloat(vol),
+            },
+            render: {
+              pixelated: true,
+              doubleBuffering: true,
+            },
+          };
+
+          engine = new GameEngine(config);
+          if (typeof engine.initialize === 'function') engine.initialize();
+
+          exposeAPI(engine);
+          wireControls();
+
+          engineReady = true;
+          loading = false;
+
+          // remove LOADING overlay
+          var overlay = document.getElementById('mini-game-overlay');
+          if (overlay) overlay.style.display = 'none';
+
+          dispatchGameEvent('game:ready', { ready: true });
+        })
+        .catch(function (err) {
+          console.error('Failed to load GameEngine', err);
+          loading = false;
+        });
+    }
+
+    // IntersectionObserver fallback
+    function observeVisibility() {
+      if ('IntersectionObserver' in window) {
+        var io = new IntersectionObserver(function (entries, obs) {
+          entries.forEach(function (entry) {
+            if (entry.isIntersecting) {
+              loadEngine();
+              obs.disconnect();
+            }
+          });
+        }, { rootMargin: '200px' });
+        io.observe(root);
+      } else {
+        // fallback: load after short timeout
+        setTimeout(loadEngine, 2000);
+      }
+    }
+
+    // Start loading on gesture as well
+    if (cta) cta.addEventListener('click', function () {
+      return loadEngine().then(function () {
+        try { if (window.miniGame && typeof window.miniGame.start === 'function') window.miniGame.start(); } catch (e) {}
+      });
+    });
+
+    // Also start loading when explicit start button is pressed
+    if (startBtn) startBtn.addEventListener('click', function () {
+      if (!engineReady) {
+        loadEngine().then(function () { try { if (window.miniGame && typeof window.miniGame.start === 'function') window.miniGame.start(); } catch (e) {} });
+      } else {
+        try { if (window.miniGame && typeof window.miniGame.start === 'function') window.miniGame.start(); } catch (e) {}
+      }
+    });
+
+    // Observe visibility to lazy-load
+    observeVisibility();
+
+    // Expose a small ready promise for tests
+    try {
+      window.__miniGameReady = new Promise(function (resolve) {
+        var check = function () {
+          if (engineReady) return resolve(true);
+          setTimeout(check, 100);
+        };
+        check();
+      });
+    } catch (e) {}
+
+    // Provide a teardown on unload
+    window.addEventListener('beforeunload', function () {
+      try {
+        engine && typeof engine.destroy === 'function' && engine.destroy();
+      } catch (e) {
+        // ignore
+      }
+    });
+
+    // Accessibility: focus canvas when ready
+    try {
+      canvas.setAttribute('tabindex', '0');
+      canvas.setAttribute('role', 'application');
+      canvas.setAttribute('aria-label', 'Code Runner game canvas');
+    } catch (e) {}
+
+  })();
 </script>

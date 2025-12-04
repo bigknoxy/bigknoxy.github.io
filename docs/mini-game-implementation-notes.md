@@ -302,6 +302,8 @@ The game includes persistent high score functionality:
 - **Automatic Updates**: High score updates when game ends with new record
 - **Reset Functionality**: Players can reset high score via API
 - **Error Handling**: Graceful fallback when localStorage unavailable
+- **Score Change Callbacks**: Callbacks fire on all score changes (setScore, collect, etc.)
+- **Event System**: Score change events emitted for external integration
 
 #### High Score API
 
@@ -312,11 +314,31 @@ const highScore = gameEngine.getHighScore();
 // Reset high score
 gameEngine.resetHighScore();
 
-// Score change callback
+// Score change callback (fires on all score changes)
 gameEngine.setScoreChangeCallback((score) => {
   console.log(`New score: ${score}`);
 });
+
+// Listen for score change events
+gameEngine.addEventListener("score", (event) => {
+  console.log(`Score changed to: ${event.data.score}`);
+});
 ```
+
+#### Recent Fixes (Task 2)
+
+**Audio System Fixes:**
+
+- Added unmute callback functionality to AudioSystem
+- Fixed callback registration with `setUnmuteCallback()` method
+- Callback fires when `unmute()` is called
+
+**Scoring System Fixes:**
+
+- Fixed score change callback to fire on `setScore()` calls
+- Added event emission for score changes
+- Fixed high score persistence to trigger on `stop()` method
+- All score change paths now properly trigger callbacks and events
 
 ## Future Enhancements
 
@@ -384,3 +406,49 @@ gameEngine.setScoreChangeCallback((score) => {
 ## License
 
 This game implementation follows the project's main license terms.
+
+## Astro Component Integration (Updated)
+
+Added a robust SSR-safe Astro component: src/components/game/MiniGame.astro.
+Key integration details:
+
+- Renders a lightweight SSR placeholder (LOADING + CTA) so no heavy JS runs server-side.
+- Lazy-loads the GameEngine via dynamic import('/src/game/GameEngine') triggered by IntersectionObserver visibility or explicit user gesture (Start CTA).
+- Creates a 240x216 canvas and attaches the engine on the client only.
+- Exposes UI controls: Start, Pause, Mute, Volume wired to GameEngine API.
+- Dispatches custom DOM events from the component root: 'game:ready', 'game:start', 'game:pause', 'game:gameover', 'game:score', 'game:collect'.
+- Exposes programmatic API at window.miniGame with documented methods (start, pause, reset, getScore, setScore, setSoundEnabled, getHighScore, resetHighScore, isPlaying, isPaused, setGameSpeed, setScoreChangeCallback, raw).
+- Guards all window/document usage with runtime checks so component is SSR-safe.
+- Accessibility: ARIA attributes, keyboard handlers (Space => jump, P => pause), touch handlers (tap to jump), and canvas set as role="application" with tabindex for keyboard focus.
+- Styling respects Tailwind tokens and uses pixelated scaling for authentic GameBoy feel.
+
+Bundle & Performance Notes:
+
+- GameEngine is dynamically imported in its own chunk to keep initial page bundle small.
+- IntersectionObserver prevents loading until near viewport; user gesture (CTA) also triggers load to comply with audio policies.
+- Minimal DOM updates: score text updated via a single callback, no canvas re-creation on state changes.
+- Techniques used to keep dynamic chunk small: dynamic import, minimal runtime glue in component, reliance on existing game modules (no additional libraries), tree-shakable systems, and no heavy third-party assets in the chunk.
+
+Usage examples:
+
+Programmatic start:
+
+```js
+await window.__miniGameReady; // resolves when engine loaded
+window.miniGame.start();
+```
+
+Listen for score events:
+
+```js
+document
+  .getElementById("mini-game-root")
+  .addEventListener("game:score", (e) => {
+    console.log("score", e.detail.score);
+  });
+```
+
+Development:
+
+- Start dev server: bun run dev
+- Visit the page and click the Start Game CTA or scroll the component into view to lazy-load.

@@ -1,6 +1,7 @@
 ---
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import { getCollection } from 'astro:content';
+import MiniGame from '../../components/game/MiniGame.astro';
 
 const projects = await getCollection('projects');
 ---
@@ -37,6 +38,11 @@ const projects = await getCollection('projects');
           </div>
         </article>
       ))}
+    </div>
+    
+    <!-- Mini Game Section -->
+    <div class="mt-16">
+      <MiniGame class="mx-auto" />
     </div>
   </main>
 </BaseLayout>

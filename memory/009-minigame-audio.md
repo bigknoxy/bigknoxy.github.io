@@ -43,6 +43,30 @@ Task 2 required implementing an AudioManager module with Web Audio API integrati
 
 ## Test Results
 
-- Audio system: 9/10 tests passing (minor unmute callback issue)
-- Scoring system: 9/10 tests passing (callback only fires on collect)
+- Audio system: 10/10 tests passing (unmute callback issue fixed)
+- Scoring system: 10/10 tests passing (callback now fires on all score changes)
 - All core functionality verified and working
+
+## Fixes Applied (Task 2 Completion)
+
+### Audio System Fixes
+
+- **Issue**: Unmute callback not firing when `unmute()` called
+- **Fix**: Added `onUnmuteCallback` property and `setUnmuteCallback()` method
+- **Result**: Callback now properly fires when audio is unmuted
+
+### Scoring System Fixes
+
+- **Issue**: Score change callback only fired on collect, not on `setScore()` calls
+- **Fix**: Modified `setScore()` to call callback and emit score change event
+- **Issue**: High score not updating when `stop()` called directly
+- **Fix**: Added `updateHighScore()` call to `stop()` method
+- **Result**: All score change paths now trigger callbacks and events properly
+
+### Test Evidence
+
+- All unit tests passing: `audio-fixes.test.js`, `scoring-fixes.test.js`
+- Original tests now pass: `audio-simple.test.js`, `scoring-simple.test.js`
+- High score persistence working correctly
+- Score change callbacks firing on all paths
+- Audio unmute callbacks working as expected

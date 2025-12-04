@@ -19,6 +19,7 @@ export class AudioSystem {
   private config: AudioConfig;
   private isInitialized: boolean = false;
   private isSuspended: boolean = true;
+  private onUnmuteCallback?: () => void;
 
   constructor(config: AudioConfig) {
     this.config = config;
@@ -187,6 +188,17 @@ export class AudioSystem {
    */
   public unmute(): void {
     this.config.enabled = true;
+    // Call unmute callback if registered
+    if (this.onUnmuteCallback) {
+      this.onUnmuteCallback();
+    }
+  }
+
+  /**
+   * Set unmute callback
+   */
+  public setUnmuteCallback(callback: () => void): void {
+    this.onUnmuteCallback = callback;
   }
 
   /**

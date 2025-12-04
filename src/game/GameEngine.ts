@@ -187,6 +187,9 @@ export class GameEngine {
       this.animationId = null;
     }
 
+    // Update high score when game stops
+    this.updateHighScore();
+
     this.emitEvent({ type: "gameover", timestamp: Date.now() });
   }
 
@@ -668,5 +671,15 @@ export class GameEngine {
 
   public setScore(score: number): void {
     this.state.score = Math.max(0, score);
+    // Call score change callback
+    if (this.onScoreChangeCallback) {
+      this.onScoreChangeCallback(this.state.score);
+    }
+    // Emit score change event
+    this.emitEvent({
+      type: "score",
+      data: { score: this.state.score },
+      timestamp: Date.now(),
+    });
   }
 }
