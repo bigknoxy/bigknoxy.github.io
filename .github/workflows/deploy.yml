@@ -41,7 +41,7 @@ jobs:
         run: bun run build
 
       - name: Setup Pagefind
-        run: bunx pagefind --site dist --output-subdir _pagefind
+        run: bunx pagefind --site dist --output-subdir pagefind
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
