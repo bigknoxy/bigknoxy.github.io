@@ -18,7 +18,7 @@
   </div>
 </div>
 
-<script type="module" client:idle>
+<script type="module">
 (() => {
   const INPUT_ID = 'search-input';
   const RESULTS_ID = 'search-results';
@@ -31,9 +31,7 @@
   let pagefindReady = false;
   let loadingPagefind = false;
   let debounceTimer = null;
-  let inFlight = false;
   let currentResults = [];
-  let focusedIndex = -1; // -1 means input
 
   function showContainer() {
     resultsEl.classList.remove('hidden');
@@ -43,7 +41,6 @@
   }
   function clearResults() {
     currentResults = [];
-    focusedIndex = -1;
     renderResults();
     hideContainer();
   }
@@ -54,7 +51,7 @@
   }
 
   function setErrorState(msg) {
-    resultsEl.innerHTML = `<div class="p-3 text-sm text-red-400">${msg} <button id=\"search-reload\" class=\"ml-2 underline\">Reload</button></div>`;
+    resultsEl.innerHTML = `<div class="p-3 text-sm text-red-400">${msg} <button id="search-reload" class="ml-2 underline">Reload</button></div>`;
     showContainer();
     const btn = document.getElementById('search-reload');
     if (btn) btn.addEventListener('click', () => location.reload());
@@ -82,21 +79,16 @@
 
     loadingPagefind = true;
 
-    return new Promise((resolve, reject) => {
-      const script = document.createElement('script');
-      script.src = '/pagefind/pagefind.js';
-      script.async = true;
-      script.onload = () => {
-        if (window.pagefind && typeof window.pagefind.search === 'function') {
-          pagefindReady = true;
-          resolve(window.pagefind);
-        } else {
-          reject(new Error('pagefind did not initialize'));
-        }
-      };
-      script.onerror = () => reject(new Error('Failed to load /pagefind/pagefind.js'));
-      document.head.appendChild(script);
-    });
+    try {
+      // Use dynamic import to load pagefind as ES module
+      const pagefind = await import('/pagefind/pagefind.js');
+      await pagefind.init();
+      window.pagefind = pagefind;
+      pagefindReady = true;
+      return pagefind;
+    } catch (err) {
+      throw new Error('Failed to load pagefind: ' + err.message);
+    }
   }
 
   function renderResults() {
@@ -117,7 +109,7 @@
       const a = document.createElement('a');
       a.href = r.url;
       a.className = 'block p-3 focus:outline-none focus:bg-tokyo-accent/10';
-      a.innerHTML = `<div class=\"font-semibold text-tokyo-text\">${escapeHtml(r.title)}</div><div class=\"text-sm text-tokyo-muted mt-1\">${escapeHtml(r.excerpt || '')}</div>`;
+      a.innerHTML = `<div class="font-semibold text-tokyo-text">${escapeHtml(r.title)}</div><div class="text-sm text-tokyo-muted mt-1">${escapeHtml(r.excerpt || '')}</div>`;
       a.tabIndex = -1; // focusable programmatically
       a.dataset.index = String(i);
 
@@ -157,7 +149,6 @@
     const node = anchors[idx];
     if (node) {
       node.focus();
-      focusedIndex = idx;
     }
   }
 
@@ -190,23 +181,32 @@
     }
 
     // perform search
-    inFlight = true;
     setSearchingState();
     try {
+      console.log('Performing search for:', query);
       const res = await window.pagefind.search(query);
-      // map results.results
-      const mapped = (res && res.results ? res.results : []).map((r) => ({
-        url: r.url || '#',
-        title: (r.meta && r.meta.title) ? r.meta.title : (r.url || ''),
-        excerpt: r.excerpt || '',
-      }));
+      console.log('Search response:', res);
+    // Debug: show raw result
+      console.log('Raw result:', res.results[0]);
+      // map results.results - need to await the data() call for each result
+      const mapped = [];
+      if (res && res.results) {
+        for (const r of res.results) {
+          const data = await r.data();
+          console.log('Result data:', data);
+          mapped.push({
+            url: data.url || '#',
+            title: (data.meta && data.meta.title) ? data.meta.title : (data.url || ''),
+            excerpt: data.excerpt || '',
+          });
+        }
+      }
+      console.log('Mapped results:', mapped);
       currentResults = mapped;
       renderResults();
     } catch (err) {
       console.error('Pagefind search failed', err);
       setErrorState('Search failed — try again or reload.');
-    } finally {
-      inFlight = false;
     }
   }
 

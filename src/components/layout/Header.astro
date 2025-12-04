@@ -1,5 +1,6 @@
 ---
 // Header.astro - Navigation header component
+import SearchBar from '../ui/SearchBar.astro';
 ---
 
 <header class="bg-tokyo-surface border-b border-tokyo-border">
@@ -16,6 +17,7 @@
       </div>
       
       <div class="flex items-center gap-4">
+        <SearchBar />
         <a 
           href="https://github.com/bigknoxy" 
           target="_blank" 
