@@ -30,6 +30,9 @@ export class GameEngine {
   private renderSystem: RenderSystem;
   private audioSystem: AudioSystem;
 
+  // Unified ground Y coordinate - aligns visual ground with physics
+  private readonly GROUND_Y: number;
+
   // Game entities
   private player: Player | null = null;
   private obstacles: EntityPool<Obstacle>;
@@ -55,6 +58,9 @@ export class GameEngine {
     this.ctx = config.canvas.getContext("2d")!;
     this.config = config;
     this.onScoreChangeCallback = config.onScoreChange;
+
+    // Initialize unified ground Y - 20px from bottom for visual ground alignment
+    this.GROUND_Y = config.height - 20;
 
     // Initialize game state
     this.state = {
@@ -119,12 +125,12 @@ export class GameEngine {
     // Initialize audio system (will be fully activated after user gesture)
     this.audioSystem.initialize();
 
-    // Create player
+    // Create player - position so feet align with ground line
     this.player = new Player({
-      position: { x: 50, y: this.config.height - 60 },
+      position: { x: 50, y: this.GROUND_Y - 20 }, // 20px = player height
       size: { width: 20, height: 20 },
       jumpPower: this.config.jumpPower,
-      groundY: this.config.height - 60,
+      groundY: this.GROUND_Y - 20, // Player's ground reference is their feet position
     });
 
     console.log("GameEngine: Initialized successfully");
@@ -277,7 +283,7 @@ export class GameEngine {
     this.renderSystem.drawBackground(this.state.frameCount);
 
     // Draw ground
-    this.renderSystem.drawGround(this.config.height - 20);
+    this.renderSystem.drawGround(this.GROUND_Y);
 
     // Render entities
     if (this.player) {
@@ -345,7 +351,7 @@ export class GameEngine {
       const obstacle = this.obstacles.acquire();
       const type = Math.random() > 0.5 ? "bug" : "error";
       const config: ObstacleConfig = {
-        position: { x: this.config.width, y: this.config.height - 40 },
+        position: { x: this.config.width, y: this.GROUND_Y - 20 }, // 20px = obstacle height
         size: { width: 16, height: 20 },
         type,
       };

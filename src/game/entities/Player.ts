@@ -3,7 +3,7 @@
  */
 
 import { Entity } from "./Entity";
-import type { PlayerConfig, Vector2D } from "../types/GameTypes";
+import type { PlayerConfig, Vector2D, BoundingBox } from "../types/GameTypes";
 
 export class Player extends Entity {
   public jumpPower: number;
@@ -16,7 +16,8 @@ export class Player extends Entity {
     super(config, "player");
     this.jumpPower = config.jumpPower;
     this.groundY = config.groundY;
-    this.position.y = this.groundY;
+    // Player position should already be set correctly (feet at groundY)
+    // Don't override it here
   }
 
   /**
@@ -27,7 +28,7 @@ export class Player extends Entity {
     this.velocity.y += 0.8; // Gravity constant
     this.position.y += this.velocity.y;
 
-    // Ground collision
+    // Ground collision - player's feet should not go below ground line
     if (this.position.y >= this.groundY) {
       this.position.y = this.groundY;
       this.velocity.y = 0;
@@ -116,7 +117,7 @@ export class Player extends Entity {
    */
   public reset(): void {
     super.reset();
-    this.position.y = this.groundY;
+    // Position should already be at correct ground level
     this.velocity = { x: 0, y: 0 };
     this.isJumping = false;
     this.animationFrame = 0;
@@ -124,12 +125,15 @@ export class Player extends Entity {
   }
 
   /**
-   * Get player center position
+   * Get bounding box for collision detection
+   * Aligns collision box with visual sprite (feet at bottom)
    */
-  public getCenter(): Vector2D {
+  public getBoundingBox(): BoundingBox {
     return {
-      x: this.position.x + this.size.width / 2,
-      y: this.position.y + this.size.height / 2,
+      x: this.position.x,
+      y: this.position.y, // Full height for accurate ground collision
+      width: this.size.width,
+      height: this.size.height, // Full height to match visual sprite
     };
   }
 

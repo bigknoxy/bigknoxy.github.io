@@ -122,14 +122,18 @@
       }
 
       if (startBtn) startBtn.addEventListener('click', function () {
-        if (engine && typeof engine.isPlaying === 'function' && engine.isPlaying()) {
-          if (typeof engine.stop === 'function') engine.stop();
-          startBtn.textContent = 'Start';
-          startBtn.setAttribute('aria-pressed', 'false');
-        } else {
-          if (typeof engine.start === 'function') engine.start();
-          startBtn.textContent = 'Stop';
-          startBtn.setAttribute('aria-pressed', 'true');
+        try {
+          if (window.miniGame && typeof window.miniGame.isPlaying === 'function' && window.miniGame.isPlaying()) {
+            if (typeof window.miniGame.raw === 'object' && typeof window.miniGame.raw.stop === 'function') window.miniGame.raw.stop();
+            startBtn.textContent = 'Start';
+            startBtn.setAttribute('aria-pressed', 'false');
+          } else {
+            if (typeof window.miniGame.start === 'function') window.miniGame.start();
+            startBtn.textContent = 'Stop';
+            startBtn.setAttribute('aria-pressed', 'true');
+          }
+        } catch (e) {
+          console.error('Start button error:', e);
         }
       });
 
@@ -262,14 +266,7 @@
       });
     });
 
-    // Also start loading when explicit start button is pressed
-    if (startBtn) startBtn.addEventListener('click', function () {
-      if (!engineReady) {
-        loadEngine().then(function () { try { if (window.miniGame && typeof window.miniGame.start === 'function') window.miniGame.start(); } catch (e) {} });
-      } else {
-        try { if (window.miniGame && typeof window.miniGame.start === 'function') window.miniGame.start(); } catch (e) {}
-      }
-    });
+
 
     // Observe visibility to lazy-load
     observeVisibility();
