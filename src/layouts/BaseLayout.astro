@@ -1,4 +1,6 @@
 ---
+import Header from '../components/layout/Header.astro';
+
 export interface Props {
   title?: string;
   description?: string;
@@ -19,6 +21,7 @@ const { title = 'BigKnoxy Portfolio', description = 'GameBoy/Tokyo Night themed 
     <link rel="stylesheet" href="/styles/global.css" />
   </head>
   <body class="bg-tokyo-bg text-tokyo-text font-mono">
+    <Header />
     <slot />
   </body>
 </html>
