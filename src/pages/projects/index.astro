@@ -1,0 +1,42 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import { getCollection } from 'astro:content';
+
+const projects = await getCollection('projects');
+---
+
+<BaseLayout title="Projects - BigKnoxy Portfolio">
+  <main class="container mx-auto px-4 py-16">
+    <h1 class="text-4xl font-pixel text-gameboy-lightest mb-8">PROJECTS</h1>
+    
+    <div class="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
+      {projects.map((project) => (
+        <article class="bg-tokyo-surface border border-tokyo-border rounded-lg p-6 hover:border-gameboy-light transition-colors">
+          <h2 class="text-xl font-pixel text-gameboy-light mb-2">{project.data.title}</h2>
+          <p class="text-tokyo-text mb-4">{project.data.description}</p>
+          
+          <div class="flex gap-2 mb-4">
+            {project.data.tags.map((tag) => (
+              <span class="text-xs px-2 py-1 bg-tokyo-border text-tokyo-text rounded">
+                {tag}
+              </span>
+            ))}
+          </div>
+          
+          <div class="flex gap-4 text-sm">
+            {project.data.demoUrl && (
+              <a href={project.data.demoUrl} class="text-gameboy-light hover:text-gameboy-lightest">
+                Demo
+              </a>
+            )}
+            {project.data.repoUrl && (
+              <a href={project.data.repoUrl} class="text-gameboy-light hover:text-gameboy-lightest">
+                Code
+              </a>
+            )}
+          </div>
+        </article>
+      ))}
+    </div>
+  </main>
+</BaseLayout>

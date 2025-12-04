@@ -1,0 +1,24 @@
+---
+export interface Props {
+  title?: string;
+  description?: string;
+}
+
+const { title = 'BigKnoxy Portfolio', description = 'GameBoy/Tokyo Night themed portfolio' } = Astro.props;
+---
+
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="description" content={description} />
+    <meta name="viewport" content="width=device-width" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <meta name="generator" content={Astro.generator} />
+    <title>{title}</title>
+    <link rel="stylesheet" href="/styles/global.css" />
+  </head>
+  <body class="bg-tokyo-bg text-tokyo-text font-mono">
+    <slot />
+  </body>
+</html>

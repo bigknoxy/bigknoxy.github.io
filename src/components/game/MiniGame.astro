@@ -1,0 +1,43 @@
+---
+// MiniGame.astro - Lazy-loadable game component stub
+---
+
+<div id="game-container" class="w-full max-w-2xl mx-auto bg-tokyo-surface border-2 border-gameboy-light rounded-lg p-4">
+  <div class="aspect-square bg-gameboy-darkest rounded relative">
+    <canvas id="game-canvas" class="w-full h-full rounded"></canvas>
+    
+    <!-- Game UI Overlay -->
+    <div class="absolute bottom-4 left-4 right-4 flex justify-between items-center">
+      <div class="text-gameboy-lightest font-pixel text-sm">
+        <span id="score">SCORE: 0000</span>
+      </div>
+      <div class="flex gap-2">
+        <button id="game-start" class="px-3 py-1 bg-gameboy-light text-gameboy-darkest font-pixel text-xs rounded hover:bg-gameboy-lightest transition-colors">
+          START
+        </button>
+        <button id="game-pause" class="px-3 py-1 bg-gameboy-light text-gameboy-darkest font-pixel text-xs rounded hover:bg-gameboy-lightest transition-colors">
+          PAUSE
+        </button>
+      </div>
+    </div>
+  </div>
+  
+  <!-- Game Controls Info -->
+  <div class="mt-4 text-center text-tokyo-muted text-sm">
+    Use arrow keys to move • Space to action • P to pause
+  </div>
+</div>
+
+<script>
+  // Game logic will be implemented here
+  // This is a stub for the actual game implementation
+  
+  // TODO: Implement game engine with:
+  // - Canvas rendering loop
+  // - Game state management
+  // - Input handling
+  // - Sound effects using Web Audio API
+  // - 8-bit style graphics and animations
+  
+  console.log('MiniGame component loaded - game logic to be implemented');
+</script>

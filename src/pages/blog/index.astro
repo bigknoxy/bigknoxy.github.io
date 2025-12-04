@@ -1,0 +1,28 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import { getCollection } from 'astro:content';
+
+const posts = await getCollection('blog');
+---
+
+<BaseLayout title="Blog - BigKnoxy Portfolio">
+  <main class="container mx-auto px-4 py-16">
+    <h1 class="text-4xl font-pixel text-gameboy-lightest mb-8">BLOG</h1>
+    
+    <div class="grid gap-8">
+      {posts.map((post) => (
+        <article class="bg-tokyo-surface border border-tokyo-border rounded-lg p-6">
+          <h2 class="text-2xl font-pixel text-gameboy-light mb-2">
+            <a href={`/blog/${post.slug}`} class="hover:text-gameboy-lightest transition-colors">
+              {post.data.title}
+            </a>
+          </h2>
+          <p class="text-tokyo-muted mb-4">{post.data.description}</p>
+          <time class="text-sm text-tokyo-muted">
+            {post.data.pubDate.toLocaleDateString()}
+          </time>
+        </article>
+      ))}
+    </div>
+  </main>
+</BaseLayout>

@@ -1,0 +1,20 @@
+---
+// SearchBar.astro - Pagefind integration stub
+---
+
+<div class="relative max-w-md mx-auto">
+  <input
+    type="search"
+    placeholder="Search..."
+    class="w-full px-4 py-2 bg-tokyo-surface border border-tokyo-border rounded-lg text-tokyo-text placeholder-tokyo-muted focus:outline-none focus:border-tokyo-accent"
+    id="search-input"
+  />
+  <div id="search-results" class="absolute top-full mt-2 w-full bg-tokyo-surface border border-tokyo-border rounded-lg shadow-lg hidden">
+    <!-- Results will be populated by Pagefind API -->
+  </div>
+</div>
+
+<script>
+  // Pagefind API integration will go here
+  // This is a stub - actual implementation will use pagefind.search()
+</script>

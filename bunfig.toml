@@ -1,0 +1,9 @@
+[install.scopes]
+"@astrojs" = "https://registry.npmjs.org"
+
+[install]
+cache = true
+frozen-lockfile = false
+
+[run]
+runtime = "bun"

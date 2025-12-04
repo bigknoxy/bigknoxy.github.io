@@ -1,0 +1,44 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import Header from '../components/layout/Header.astro';
+import Footer from '../components/layout/Footer.astro';
+---
+
+<BaseLayout title="BigKnoxy - GameBoy/Tokyo Night Portfolio">
+  <Header />
+  
+  <main class="min-h-screen flex items-center justify-center px-4">
+    <div class="text-center max-w-4xl">
+      <h1 class="text-4xl md:text-6xl font-pixel text-gameboy-lightest mb-8">
+        BIGKNOXY
+      </h1>
+      <p class="text-xl md:text-2xl text-tokyo-text mb-12">
+        GameBoy/Tokyo Night Portfolio
+      </p>
+      
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-12">
+        <a 
+          href="/projects" 
+          class="block p-8 bg-tokyo-surface border-2 border-gameboy-light hover:border-gameboy-lightest transition-colors rounded-lg"
+        >
+          <h2 class="text-2xl font-pixel text-gameboy-light mb-4">PROJECTS</h2>
+          <p class="text-tokyo-text">Explore my work and experiments</p>
+        </a>
+        
+        <a 
+          href="/blog" 
+          class="block p-8 bg-tokyo-surface border-2 border-gameboy-light hover:border-gameboy-lightest transition-colors rounded-lg"
+        >
+          <h2 class="text-2xl font-pixel text-gameboy-light mb-4">BLOG</h2>
+          <p class="text-tokyo-text">Thoughts, tutorials, and updates</p>
+        </a>
+      </div>
+      
+      <div class="text-tokyo-muted">
+        <p class="text-sm">Built with Astro + Tailwind CSS</p>
+      </div>
+    </div>
+  </main>
+  
+  <Footer />
+</BaseLayout>
