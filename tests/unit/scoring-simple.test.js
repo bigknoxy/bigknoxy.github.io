@@ -75,7 +75,7 @@ const mockCanvas = {
 };
 
 // Import GameEngine
-const { GameEngine } = await import("../src/game/GameEngine");
+const { GameEngine } = await import("../../src/game/GameEngine");
 
 console.log("Testing Scoring System...");
 
@@ -126,8 +126,7 @@ console.log("✓ Callback called with 100:", callbackScore === 100);
 console.log("✓ Initial high score is 0:", gameEngine.getHighScore() === 0);
 
 gameEngine.setScore(150);
-gameEngine.start();
-gameEngine.stop(); // Trigger game over to save high score
+gameEngine.stop(); // Trigger game over to save high score (no need to start)
 
 console.log("✓ High score updated to 150:", gameEngine.getHighScore() === 150);
 

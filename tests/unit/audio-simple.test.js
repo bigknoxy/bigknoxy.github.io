@@ -2,33 +2,8 @@
  * Simple Audio System Test
  */
 
-// Mock Web Audio API
-const mockAudioContext = {
-  createOscillator: () => ({
-    connect: () => {},
-    type: "square",
-    frequency: { setValueAtTime: () => {} },
-    start: () => {},
-    stop: () => {},
-  }),
-  createGain: () => ({
-    connect: () => {},
-    gain: { value: 0 },
-  }),
-  destination: {},
-  resume: async () => {},
-  close: () => {},
-  state: "suspended",
-  currentTime: 0,
-};
-
-// Mock window
-global.window = {
-  AudioContext: () => mockAudioContext,
-};
-
 // Import AudioSystem
-const { AudioSystem } = await import("../src/game/systems/AudioSystem");
+const { AudioSystem } = await import("../../src/game/systems/AudioSystem");
 
 console.log("Testing AudioSystem...");
 

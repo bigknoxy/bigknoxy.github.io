@@ -9,7 +9,10 @@
     "preview": "bunx astro preview",
     "optimize": "bunx astro build --optimize",
     "lint": "bunx prettier --write .",
-    "typecheck": "bunx astro check"
+    "typecheck": "bunx astro check",
+    "test": "bun test --preload ./tests/test-setup.ts tests/unit/**/*.test.*",
+    "test:unit": "bun test --preload ./tests/test-setup.ts tests/unit/**/*.test.*",
+    "test:e2e": "npx playwright test --project=chromium"
   },
   "dependencies": {
     "@astrojs/rss": "^4.0.0",
