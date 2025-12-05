@@ -298,23 +298,6 @@ function createMockCanvas(): HTMLCanvasElement {
   } as any;
 }
 
-// Mock performance.now
-Object.defineProperty(window, "performance", {
-  value: {
-    now: () => Date.now(),
-  },
-});
-
-// Mock requestAnimationFrame
-Object.defineProperty(window, "requestAnimationFrame", {
-  value: (callback: FrameRequestCallback) => setTimeout(callback, 16),
-});
-
-// Mock cancelAnimationFrame
-Object.defineProperty(window, "cancelAnimationFrame", {
-  value: (id: number) => clearTimeout(id),
-});
-
 // Import GameEngine after mocking
 import { GameEngine } from "../../src/game/GameEngine";
 

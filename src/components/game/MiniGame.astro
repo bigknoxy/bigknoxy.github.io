@@ -223,7 +223,7 @@
     function loadEngine() {
       if (engineReady || loading) return Promise.resolve();
       loading = true;
-      return import('/game/game-engine.js')
+      return import('/assets/game-engine.js')
         .then(function (module) {
           var GameEngine = module.GameEngine || module.default;
           var vol = '0.3';

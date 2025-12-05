@@ -3,10 +3,10 @@ import { test, expect } from "@playwright/test";
 test.describe("MiniGame integration", () => {
   test.beforeEach(async ({ page }) => {
     // Intercept requests to serve the correct game engine file from local dist
-    await page.route("**/game/game-engine.js", async (route) => {
+    await page.route("**/assets/game-engine.js", async (route) => {
       const fs = await import("fs");
       const path = await import("path");
-      const filePath = path.join(process.cwd(), "dist/game/game-engine.js");
+      const filePath = path.join(process.cwd(), "dist/assets/game-engine.js");
       const content = fs.readFileSync(filePath, "utf8");
       await route.fulfill({
         status: 200,
@@ -19,7 +19,7 @@ test.describe("MiniGame integration", () => {
     await page.route("**/src/game/GameEngine", async (route) => {
       const fs = await import("fs");
       const path = await import("path");
-      const filePath = path.join(process.cwd(), "dist/game/game-engine.js");
+      const filePath = path.join(process.cwd(), "dist/assets/game-engine.js");
       const content = fs.readFileSync(filePath, "utf8");
       await route.fulfill({
         status: 200,
