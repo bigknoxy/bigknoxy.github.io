@@ -259,8 +259,6 @@ export class PhysicsSystem {
     rayDir: Vector2D,
     entity: Entity,
   ): { distance: number; point: Vector2D } | null {
-    const box = entity.getBoundingBox();
-
     // This is a simplified implementation
     // In a real game, you'd want a more robust ray-box intersection algorithm
     const center = this.getCenter(entity);

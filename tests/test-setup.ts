@@ -69,7 +69,14 @@ if (typeof global !== "undefined") {
     cancelAnimationFrame: (id: number) => clearTimeout(id),
     AudioContext: MockAudioContext,
     webkitAudioContext: MockAudioContext,
+    addEventListener: () => {},
+    removeEventListener: () => {},
   };
+
+  // Also add requestAnimationFrame to global scope
+  (global as any).requestAnimationFrame = (callback: FrameRequestCallback) =>
+    setTimeout(callback, 16) as unknown as number;
+  (global as any).cancelAnimationFrame = (id: number) => clearTimeout(id);
 
   // Canvas mock for 2D context
   (global as any).HTMLCanvasElement = class MockCanvas {
@@ -141,6 +148,55 @@ if (typeof global !== "undefined") {
       return Object.keys(localStorageMock).length;
     },
     key: (index: number) => Object.keys(localStorageMock)[index] || null,
+  };
+
+  // Document mock
+  (global as any).document = {
+    createElement: (tag: string) => {
+      if (tag === "canvas") {
+        return new (global as any).HTMLCanvasElement();
+      }
+      return {
+        tagName: tag.toUpperCase(),
+        id: "",
+        className: "",
+        classList: {
+          _set: new Set<string>(),
+          add(s: string) {
+            this._set.add(s);
+          },
+          remove(s: string) {
+            this._set.delete(s);
+          },
+          contains(s: string) {
+            return this._set.has(s);
+          },
+        },
+        _attrs: {},
+        _listeners: {} as Record<string, Function[]>,
+        textContent: "",
+        innerHTML: "",
+        setAttribute(name: string, value: string) {
+          this._attrs[name] = String(value);
+        },
+        getAttribute(name: string) {
+          return this._attrs[name] || null;
+        },
+        addEventListener(name: string, fn: Function) {
+          (this._listeners[name] = this._listeners[name] || []).push(fn);
+        },
+        dispatchEvent(ev: any) {
+          const fns = this._listeners[ev.type] || [];
+          fns.forEach((f: any) => f.call(this, ev));
+          return true;
+        },
+        focus() {},
+        click() {
+          const fns = this._listeners["click"] || [];
+          fns.forEach((f: any) => f.call(this, new Event("click")));
+        },
+      };
+    },
   };
 }
 

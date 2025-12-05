@@ -7,14 +7,23 @@
   <!-- SSR fallback / placeholder -->
   <div class="bg-tokyo-surface border-2 border-gameboy-light rounded-lg p-4 text-center">
     <div class="mx-auto max-w-xs">
-      <div class="game-screen bg-gameboy-darkest rounded relative mx-auto" style="width:100%;">
+      <div id="game-screen" class="game-screen bg-gameboy-darkest rounded relative mx-auto" style="width:100%;">
         <canvas id="mini-game-canvas" width="240" height="216" aria-hidden="true" class="pixel-perfect w-full h-auto mx-auto block" style="aspect-ratio: 240 / 216;"></canvas>
 
-        <div id="mini-game-overlay" class="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
-          <div class="bg-black/60 text-gameboy-lightest font-pixel p-3 rounded pointer-events-auto">
+        <div id="mini-game-overlay" class="absolute inset-0 flex items-center justify-center pointer-events-none">
+          <div id="mini-game-message" class="bg-black/60 text-gameboy-lightest font-pixel p-3 rounded pointer-events-auto">
             LOADING
           </div>
           <button id="mini-game-cta" class="mt-3 pointer-events-auto px-4 py-2 bg-gameboy-light text-gameboy-darkest font-pixel text-sm rounded hover:bg-gameboy-lightest focus:outline-none" aria-label="Load and start game">Start Game</button>
+        </div>
+
+        <!-- GAME OVER overlay contained within game-screen -->
+        <div id="game-over-overlay" class="absolute inset-0 bg-black/80 flex items-center justify-center hidden pointer-events-none" role="dialog" aria-modal="true" aria-labelledby="gameover-title" aria-hidden="true">
+          <div class="pointer-events-auto text-center bg-[#0f381f]/90 p-4 rounded-md min-w-[160px] max-w-[90%] shadow-lg">
+            <h2 id="gameover-title" class="gameover-title">GAME OVER</h2>
+            <p id="gameover-score" class="gameover-score" aria-live="assertive">FINAL: 0000</p>
+            <button id="gameover-restart" class="mt-2 px-4 py-2 bg-gameboy-light text-gameboy-darkest font-pixel text-sm rounded focus:outline-none" aria-label="Restart game">Restart</button>
+          </div>
         </div>
       </div>
 
@@ -37,7 +46,7 @@
   </div>
 </div>
 
-<script is:inline type="module">
+<script type="module">
   // Client-only logic: lazy-load GameEngine on visibility or user gesture
   (function () {
     if (typeof window === 'undefined') return;
@@ -67,6 +76,12 @@
     var engineReady = false;
     var loading = false;
 
+    // Test backward compatibility: set initial ready state
+    try { 
+      window.__miniGameReady = false;
+      window.__miniGameReadyPromise = null;
+    } catch (e) {}
+
     // Helper to dispatch custom events from root
     function dispatchGameEvent(name, detail) {
       if (detail === void 0) { detail = {}; }
@@ -76,14 +91,23 @@
       try { window.__lastMiniGameEvent = { name: name, detail: detail, time: Date.now() }; } catch (e) {}
     }
 
+    // Update score UI helper
+    function updateScoreUI(score) {
+      if (scoreEl) {
+        scoreEl.textContent = 'SCORE: ' + String(score || 0).padStart(4, '0');
+      }
+    }
+
     // Setup a small API surface on window for programmatic control
     function exposeAPI(engineInstance) {
       var api = {
         start: function () { return engineInstance && typeof engineInstance.start === 'function' && engineInstance.start(); },
         pause: function () { return engineInstance && typeof engineInstance.pause === 'function' && engineInstance.pause(); },
         reset: function () { return engineInstance && typeof engineInstance.reset === 'function' && engineInstance.reset(); },
+        restart: function () { return engineInstance && typeof engineInstance.restart === 'function' && engineInstance.restart(); },
         getScore: function () { return engineInstance && typeof engineInstance.getScore === 'function' ? engineInstance.getScore() : 0; },
         setScore: function (s) { return engineInstance && typeof engineInstance.setScore === 'function' && engineInstance.setScore(s); },
+        addScore: function (points) { return engineInstance && typeof engineInstance.addScore === 'function' && engineInstance.addScore(points); },
         setSoundEnabled: function (enabled) {
           var audio = engineInstance && typeof engineInstance.getAudioSystem === 'function' && engineInstance.getAudioSystem();
           if (audio) {
@@ -102,19 +126,18 @@
       try { window.miniGame = api; } catch (e) {}
     }
 
-    // Wire engine to UI controls
+    // Wire controls after engine is ready
     function wireControls() {
-      if (!engine) return;
-
-      // Update score UI via callback
+      // Update score UI via callback (for immediate updates)
       if (engine && typeof engine.setScoreChangeCallback === 'function') {
-        engine.setScoreChangeCallback(function (score) {
-          if (scoreEl) scoreEl.textContent = "SCORE: " + String(score).padStart(4, '0');
-          dispatchGameEvent('game:score', { score: score });
-        });
+        engine.setScoreChangeCallback(updateScoreUI);
       }
 
+      // Also listen for engine 'score' events (backup/consistency)
       if (engine && typeof engine.addEventListener === 'function') {
+        engine.addEventListener('score', function (e) {
+          updateScoreUI(e.data.score);
+        });
         engine.addEventListener('gamestart', function (e) { dispatchGameEvent('game:start', e); });
         engine.addEventListener('pause', function (e) { dispatchGameEvent('game:pause', e); });
         engine.addEventListener('gameover', function (e) { dispatchGameEvent('game:gameover', e); });
@@ -196,7 +219,7 @@
     function loadEngine() {
       if (engineReady || loading) return Promise.resolve();
       loading = true;
-      return import('/src/game/GameEngine')
+      return import('/game/game-engine.js')
         .then(function (module) {
           var GameEngine = module.GameEngine || module.default;
           var vol = '0.3';
@@ -229,6 +252,14 @@
           engineReady = true;
           loading = false;
 
+          // Test backward compatibility: set ready state to true
+          try { 
+            window.__miniGameReady = true;
+            if (readyPromiseResolve) readyPromiseResolve(true);
+            // Dispatch deterministic ready signal for tests
+            window.dispatchEvent(new CustomEvent('miniGame:ready', { detail: { ready: true } }));
+          } catch (e) {}
+
           // remove LOADING overlay
           var overlay = document.getElementById('mini-game-overlay');
           if (overlay) overlay.style.display = 'none';
@@ -241,8 +272,17 @@
         });
     }
 
+    // Expose loadEngine to window for handlers
+    try { window.loadEngine = loadEngine; } catch (e) {}
+
     // IntersectionObserver fallback
     function observeVisibility() {
+      // TEST_MODE_GUARD: Skip IntersectionObserver in test mode for deterministic loading
+      if (window.__TEST_MODE === true) {
+        loadEngine();
+        return;
+      }
+      
       if ('IntersectionObserver' in window) {
         var io = new IntersectionObserver(function (entries, obs) {
           entries.forEach(function (entry) {
@@ -266,14 +306,14 @@
       });
     });
 
-
-
     // Observe visibility to lazy-load
     observeVisibility();
 
     // Expose a small ready promise for tests
+    var readyPromiseResolve = null;
     try {
-      window.__miniGameReady = new Promise(function (resolve) {
+      window.__miniGameReadyPromise = new Promise(function (resolve) {
+        readyPromiseResolve = resolve;
         var check = function () {
           if (engineReady) return resolve(true);
           setTimeout(check, 100);
@@ -297,6 +337,107 @@
       canvas.setAttribute('role', 'application');
       canvas.setAttribute('aria-label', 'Code Runner game canvas');
     } catch (e) {}
+
+    // GAME OVER overlay wiring
+    (function () {
+      var gameoverEl = document.getElementById('game-over-overlay');
+      var scoreEl = document.getElementById('gameover-score');
+      var restartBtn = document.getElementById('gameover-restart');
+      var hudScore = document.getElementById('mini-game-score');
+      var pendingCalls = [];
+      var pendingInterval = null;
+
+      function flushPending() {
+        if (!window.miniGame) return;
+        pendingCalls.forEach(function (fn) { try { fn(); } catch (e) {} });
+        pendingCalls = [];
+        if (pendingInterval) { clearInterval(pendingInterval); pendingInterval = null; }
+      }
+
+      function callMiniGame(fn) {
+        if (window.miniGame) {
+          try { fn(); } catch (e) {}
+        } else {
+          pendingCalls.push(fn);
+          if (!pendingInterval) {
+            pendingInterval = setInterval(function () {
+              if (window.miniGame) flushPending();
+            }, 100);
+          }
+        }
+      }
+
+      function showGameOver(finalScore) {
+        if (!gameoverEl) return;
+        gameoverEl.classList.remove('hidden');
+        gameoverEl.setAttribute('aria-hidden', 'false');
+        if (scoreEl) scoreEl.textContent = 'FINAL: ' + String(finalScore).padStart(4, '0');
+        // dispatch analytics-safe event from root
+        try { root.dispatchEvent(new CustomEvent('ui:gameover-shown', { detail: { score: Number(finalScore) } })); } catch (e) {}
+        // focus restart button
+        try { if (restartBtn && typeof restartBtn.focus === 'function') restartBtn.focus(); } catch (e) {}
+      }
+
+      function hideGameOver() {
+        if (!gameoverEl) return;
+        gameoverEl.classList.add('hidden');
+        gameoverEl.setAttribute('aria-hidden', 'true');
+        // return focus to canvas
+        try { if (canvas && typeof canvas.focus === 'function') canvas.focus(); } catch (e) {}
+      }
+
+      // Listen for engine events emitted from root or document
+      function onGameOver(e) {
+        var final = e && e.detail && typeof e.detail.score === 'number' ? e.detail.score : (window.miniGame && typeof window.miniGame.getScore === 'function' ? window.miniGame.getScore() : 0);
+        showGameOver(final);
+      }
+      function onResetStart() {
+        hideGameOver();
+        // reset HUD
+        try { if (hudScore) hudScore.textContent = 'SCORE: 0000'; } catch (e) {}
+      }
+
+      // support both root-dispatched events and document-level
+      root.addEventListener && root.addEventListener('game:gameover', onGameOver);
+      root.addEventListener && root.addEventListener('game:reset', onResetStart);
+      root.addEventListener && root.addEventListener('game:start', onResetStart);
+      document.addEventListener && document.addEventListener('game:gameover', onGameOver);
+      document.addEventListener && document.addEventListener('game:reset', onResetStart);
+      document.addEventListener && document.addEventListener('game:start', onResetStart);
+
+      // Restart button wiring
+      if (restartBtn) {
+        restartBtn.addEventListener('click', function () {
+          callMiniGame(function () {
+            try { window.miniGame.restart && window.miniGame.restart(); } catch (e) {}
+          });
+          // hide overlay and reset HUD immediately
+          hideGameOver();
+          try { if (hudScore) hudScore.textContent = 'SCORE: 0000'; } catch (e) {}
+        });
+
+        // keyboard activation on Restart (Enter/Space)
+        restartBtn.addEventListener('keydown', function (ev) {
+          if (ev.key === 'Enter' || ev.key === ' ' || ev.code === 'Space') {
+            ev.preventDefault();
+            restartBtn.click();
+          }
+        });
+      }
+
+      // Close overlay with Escape and call reset
+      window.addEventListener('keydown', function (ev) {
+        if (!gameoverEl) return;
+        var isOpen = gameoverEl.getAttribute('aria-hidden') === 'false';
+        if (!isOpen) return;
+        if (ev.key === 'Escape') {
+          // hide overlay and reset engine
+          hideGameOver();
+          callMiniGame(function () { try { window.miniGame.reset && window.miniGame.reset(); } catch (e) {} });
+        }
+      });
+
+    })();
 
   })();
 </script>

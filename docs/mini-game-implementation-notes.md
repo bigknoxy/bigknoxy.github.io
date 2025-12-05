@@ -61,10 +61,12 @@ bun run preview
 
 ### Obstacles
 
-- Two types: Bugs and Error blocks
+- Two types: GameBoy consoles and Computer monitors (procedurally drawn)
 - Spawn at configurable rates
 - Move from right to left
+- Animated sprites with blinking screens and pulsing buttons
 - Collision ends the game
+- Procedural Canvas 2D rendering using GameBoy palette colors
 
 ### Collectibles
 
@@ -198,6 +200,10 @@ const render = {
 ```
 
 ## Integration Points
+
+### GAME OVER overlay wiring
+
+The MiniGame component now wires the DOM-based GAME OVER overlay to GameEngine events. The client script listens for 'game:gameover', 'game:reset', and 'game:start' on both the component root and document. On 'game:gameover' the overlay (#game-over-overlay) is shown, aria-hidden is set to false, and #gameover-score is updated to display the final score padded to 4 digits (e.g. FINAL: 0123). The restart button focuses automatically and triggers window.miniGame.reset() then window.miniGame.start() (with a queueing fallback if window.miniGame is not yet available). On 'game:reset' or 'game:start' the overlay is hidden and focus returns to the canvas. An analytics-safe event 'ui:gameover-shown' is dispatched from the component root when the overlay is shown.
 
 ### Astro Component Integration
 

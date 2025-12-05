@@ -21,7 +21,6 @@ import type {
 } from "./types/GameTypes";
 
 export class GameEngine {
-  private canvas: HTMLCanvasElement;
   private ctx: CanvasRenderingContext2D;
   private config: GameEngineConfig;
   private state: GameState;
@@ -54,7 +53,6 @@ export class GameEngine {
   private onScoreChangeCallback?: (score: number) => void;
 
   constructor(config: GameEngineConfig) {
-    this.canvas = config.canvas;
     this.ctx = config.canvas.getContext("2d")!;
     this.config = config;
     this.onScoreChangeCallback = config.onScoreChange;
@@ -179,6 +177,22 @@ export class GameEngine {
     this.state.frameCount = 0;
     this.resetGame();
     this.emitEvent({ type: "reset", timestamp: Date.now() });
+  }
+
+  /**
+   * Restart the game - reset and start playing
+   */
+  public restart(): void {
+    // Stop if currently running
+    if (this.state.isRunning) {
+      this.stop();
+    }
+
+    // Reset game state
+    this.reset();
+
+    // Start the game again
+    this.start();
   }
 
   /**
@@ -407,7 +421,6 @@ export class GameEngine {
    */
   private collectItem(collectible: Collectible): void {
     const points = (collectible as any).points || 10;
-    this.state.score += points;
 
     // Play collect sound
     this.audioSystem.playCollect();
@@ -423,17 +436,8 @@ export class GameEngine {
       timestamp: Date.now(),
     });
 
-    // Emit score change event
-    this.emitEvent({
-      type: "score",
-      data: { score: this.state.score, points },
-      timestamp: Date.now(),
-    });
-
-    // Call score change callback
-    if (this.onScoreChangeCallback) {
-      this.onScoreChangeCallback(this.state.score);
-    }
+    // Update score atomically
+    this.addScore(points);
   }
 
   /**
@@ -677,6 +681,21 @@ export class GameEngine {
 
   public setScore(score: number): void {
     this.state.score = Math.max(0, score);
+    this.notifyScoreChange();
+  }
+
+  /**
+   * Add points to current score (atomic operation)
+   */
+  public addScore(points: number): void {
+    this.state.score = Math.max(0, this.state.score + points);
+    this.notifyScoreChange();
+  }
+
+  /**
+   * Notify about score changes (single synchronized method)
+   */
+  private notifyScoreChange(): void {
     // Call score change callback
     if (this.onScoreChangeCallback) {
       this.onScoreChangeCallback(this.state.score);
