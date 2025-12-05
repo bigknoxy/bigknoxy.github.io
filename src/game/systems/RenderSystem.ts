@@ -223,36 +223,36 @@ export class RenderSystem {
     ctx.fillStyle = "rgba(15, 56, 15, 0.8)";
     ctx.fillRect(0, 0, this.width, this.height);
 
-    // Game Over text
-    this.drawText("GAME OVER", this.width / 2 - 60, this.height / 2 - 20, {
+    // Calculate responsive font sizes based on canvas size
+    const titleSize = Math.max(12, Math.min(24, this.width / 12));
+    const scoreSize = Math.max(8, Math.min(16, this.width / 20));
+    const instructionSize = Math.max(6, Math.min(12, this.width / 24));
+
+    // Game Over text - properly centered
+    this.drawText("GAME OVER", this.width / 2, this.height / 2 - 20, {
       color: "#9bbc0f",
-      size: 20,
+      size: titleSize,
       align: "center",
     });
 
-    // Final score
+    // Final score - properly centered
     this.drawText(
       `FINAL: ${score.toString().padStart(4, "0")}`,
-      this.width / 2 - 50,
+      this.width / 2,
       this.height / 2 + 10,
       {
         color: "#9bbc0f",
-        size: 12,
+        size: scoreSize,
         align: "center",
       },
     );
 
-    // Restart instruction
-    this.drawText(
-      "CLICK TO RESTART",
-      this.width / 2 - 70,
-      this.height / 2 + 40,
-      {
-        color: "#9bbc0f",
-        size: 10,
-        align: "center",
-      },
-    );
+    // Restart instruction - properly centered
+    this.drawText("CLICK TO RESTART", this.width / 2, this.height / 2 + 40, {
+      color: "#9bbc0f",
+      size: instructionSize,
+      align: "center",
+    });
   }
 
   /**
