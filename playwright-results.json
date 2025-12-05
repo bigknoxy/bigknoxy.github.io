@@ -1,0 +1,192 @@
+Testing AudioSystem fixes...
+AudioManager: Web Audio API not supported
+✓ Unmute callback fired: true
+✓ Volume set to 0.7: true
+✓ Muted state: true
+✓ Unmuted state: false
+✓ AudioSystem destroyed
+AudioSystem fixes tests completed!
+Testing AudioSystem...
+AudioManager: Web Audio API not supported
+✓ AudioSystem initialized successfully
+✓ Volume set to 0.5: true
+✓ Volume clamped to 1: true
+✓ Volume clamped to 0: true
+✓ Muted: true
+✓ Unmuted: false
+✓ Jump sound played without error
+✓ Collect sound played without error
+✓ Game over sound played without error
+✓ Is ready: false
+✓ Is suspended: true
+✓ AudioSystem destroyed
+AudioSystem tests completed!
+Running Game Engine Unit Tests...
+
+✓ should detect basic collision
+✓ should not detect collision when separated
+✓ should calculate fixed timestep correctly
+✓ should handle accumulator logic
+✓ should create mock canvas
+✓ should validate game configuration
+✓ should handle vector operations
+✓ should calculate distance between points
+✓ should clamp values correctly
+✓ should interpolate between values
+
+Test Results: 10 passed, 0 failed
+
+All tests passed!
+Testing Scoring System fixes...
+AudioManager: Web Audio API not supported
+GameEngine: Initialized successfully
+✓ Score set to 100: true
+✓ Callback called with 100: true
+✓ Score set to 250: true
+✓ Callback called with 250: true
+✓ Score set to 0: true
+✓ Callback called with 0: true
+✓ Score clamped to 0: true
+✓ Callback called with 0: true
+✓ Score event fired: true
+✓ Score event data correct: true
+✓ GameEngine destroyed
+Scoring System fixes tests completed!
+Testing Scoring System Reliability...
+AudioManager: Web Audio API not supported
+GameEngine: Initialized successfully
+✓ addScore(10) - Score is 10: true
+✓ addScore(10) - Callback called with 10: true
+✓ addScore(10) - Event fired: true
+✓ addScore(10) - Event data correct: true
+✓ addScore(25) - Score is 35: true
+✓ addScore(25) - Callback called with 35: true
+✓ addScore(25) - Event fired: true
+✓ addScore(25) - Event data correct: true
+✓ Score formatting - 0 -> SCORE: 0000
+✓ Score formatting - 5 -> SCORE: 0005
+✓ Score formatting - 42 -> SCORE: 0042
+✓ Score formatting - 150 -> SCORE: 0150
+✓ Score formatting - 9999 -> SCORE: 9999
+✓ High score reset to 0: true
+✓ High score saved as 100: true
+✓ High score updated to 250: true
+✓ High score remains 250: true
+✓ Race condition - Callback count: 4 (correct)
+✓ Race condition - Event count: 4 (correct)
+✓ Race condition - Final callback score: 50 (correct)
+✓ Race condition - Final event score: 50 (correct)
+✓ localStorage errors handled gracefully
+✓ GameEngine has required API methods:
+  - getScore: ✓
+  - setScore: ✓
+  - addScore: ✓
+  - getHighScore: ✓
+  - resetHighScore: ✓
+  - setScoreChangeCallback: ✓
+✓ addScore with negative points clamps to 0: true
+✓ GameEngine destroyed
+Scoring System Reliability tests completed!
+Testing Scoring System...
+AudioManager: Web Audio API not supported
+GameEngine: Initialized successfully
+✓ Initial score is 0: true
+✓ Score set to 100: true
+✓ Callback called with 100: true
+✓ Initial high score is 0: true
+✓ High score updated to 150: true
+✓ High score reset to 0: true
+✓ Game speed set to 5: true
+✓ Game speed clamped to 20: true
+✓ Game speed clamped to 1: true
+✓ localStorage errors handled gracefully
+✓ GameEngine destroyed
+Scoring System tests completed!
+{
+  "config": {
+    "configFile": "/home/josh/projects/bigknoxy-gh/playwright.config.ts",
+    "rootDir": "/home/josh/projects/bigknoxy-gh/tests",
+    "forbidOnly": false,
+    "fullyParallel": true,
+    "globalSetup": null,
+    "globalTeardown": null,
+    "globalTimeout": 0,
+    "grep": {},
+    "grepInvert": null,
+    "maxFailures": 0,
+    "metadata": {},
+    "preserveOutput": "always",
+    "reporter": [
+      [
+        "json"
+      ]
+    ],
+    "reportSlowTests": {
+      "max": 5,
+      "threshold": 300000
+    },
+    "quiet": false,
+    "projects": [
+      {
+        "outputDir": "/home/josh/projects/bigknoxy-gh/test-results",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {},
+        "id": "chromium",
+        "name": "chromium",
+        "testDir": "/home/josh/projects/bigknoxy-gh/tests",
+        "testIgnore": [],
+        "testMatch": [
+          "**/*.@(spec|test).?(c|m)[jt]s?(x)"
+        ],
+        "timeout": 30000
+      }
+    ],
+    "shard": null,
+    "tags": [],
+    "updateSnapshots": "missing",
+    "updateSourceMethod": "patch",
+    "version": "1.57.0",
+    "workers": 4,
+    "webServer": {
+      "command": "bun run preview",
+      "port": 4321,
+      "reuseExistingServer": true
+    }
+  },
+  "suites": [],
+  "errors": [
+    {
+      "message": "Error: Only URLs with a scheme in: file, data, and node are supported by the default ESM loader. Received protocol 'bun:'",
+      "stack": "Error: Only URLs with a scheme in: file, data, and node are supported by the default ESM loader. Received protocol 'bun:'"
+    },
+    {
+      "message": "Error: Only URLs with a scheme in: file, data, and node are supported by the default ESM loader. Received protocol 'bun:'",
+      "stack": "Error: Only URLs with a scheme in: file, data, and node are supported by the default ESM loader. Received protocol 'bun:'"
+    },
+    {
+      "message": "Error: Only URLs with a scheme in: file, data, and node are supported by the default ESM loader. Received protocol 'bun:'",
+      "stack": "Error: Only URLs with a scheme in: file, data, and node are supported by the default ESM loader. Received protocol 'bun:'"
+    },
+    {
+      "message": "Error: Only URLs with a scheme in: file, data, and node are supported by the default ESM loader. Received protocol 'bun:'",
+      "stack": "Error: Only URLs with a scheme in: file, data, and node are supported by the default ESM loader. Received protocol 'bun:'"
+    },
+    {
+      "message": "Error: Only URLs with a scheme in: file, data, and node are supported by the default ESM loader. Received protocol 'bun:'",
+      "stack": "Error: Only URLs with a scheme in: file, data, and node are supported by the default ESM loader. Received protocol 'bun:'"
+    },
+    {
+      "message": "Error: Only URLs with a scheme in: file, data, and node are supported by the default ESM loader. Received protocol 'bun:'",
+      "stack": "Error: Only URLs with a scheme in: file, data, and node are supported by the default ESM loader. Received protocol 'bun:'"
+    }
+  ],
+  "stats": {
+    "startTime": "2025-12-05T03:16:12.477Z",
+    "duration": 797.9960000000001,
+    "expected": 0,
+    "skipped": 0,
+    "unexpected": 0,
+    "flaky": 0
+  }
+}
