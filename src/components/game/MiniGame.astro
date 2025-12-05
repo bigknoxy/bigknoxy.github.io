@@ -91,6 +91,13 @@
       try { window.__lastMiniGameEvent = { name: name, detail: detail, time: Date.now() }; } catch (e) {}
     }
 
+    // Update score UI helper
+    function updateScoreUI(score) {
+      if (scoreEl) {
+        scoreEl.textContent = 'SCORE: ' + String(score || 0).padStart(4, '0');
+      }
+    }
+
     // Setup a small API surface on window for programmatic control
     function exposeAPI(engineInstance) {
       var api = {
@@ -119,6 +126,8 @@
       try { window.miniGame = api; } catch (e) {}
     }
 
+    // Wire controls after engine is ready
+    function wireControls() {
       // Update score UI via callback (for immediate updates)
       if (engine && typeof engine.setScoreChangeCallback === 'function') {
         engine.setScoreChangeCallback(updateScoreUI);
@@ -263,6 +272,9 @@
         });
     }
 
+    // Expose loadEngine to window for handlers
+    try { window.loadEngine = loadEngine; } catch (e) {}
+
     // IntersectionObserver fallback
     function observeVisibility() {
       // TEST_MODE_GUARD: Skip IntersectionObserver in test mode for deterministic loading
@@ -293,8 +305,6 @@
         try { if (window.miniGame && typeof window.miniGame.start === 'function') window.miniGame.start(); } catch (e) {}
       });
     });
-
-
 
     // Observe visibility to lazy-load
     observeVisibility();
