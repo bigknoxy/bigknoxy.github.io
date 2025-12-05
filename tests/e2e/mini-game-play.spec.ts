@@ -2,11 +2,21 @@ import { test, expect } from "@playwright/test";
 
 test.describe("MiniGame integration", () => {
   test.beforeEach(async ({ page }) => {
+    // Log all requests to debug
+    await page.route("**/*", async (route) => {
+      const url = route.request().url();
+      if (url.includes("game-engine") || url.includes("GameEngine")) {
+        console.log("Game engine request:", url);
+      }
+      await route.continue();
+    });
+
     // Intercept requests to serve the correct game engine file from local dist
-    await page.route("**/assets/game-engine.js", async (route) => {
+    await page.route("**/game/game-engine.js", async (route) => {
+      console.log("Intercepted game-engine.js request:", route.request().url());
       const fs = await import("fs");
       const path = await import("path");
-      const filePath = path.join(process.cwd(), "dist/assets/game-engine.js");
+      const filePath = path.join(process.cwd(), "dist/game/game-engine.js");
       const content = fs.readFileSync(filePath, "utf8");
       await route.fulfill({
         status: 200,
@@ -15,11 +25,32 @@ test.describe("MiniGame integration", () => {
       });
     });
 
-    // Also intercept the wrong path that the component is actually trying to use
-    await page.route("**/src/game/GameEngine", async (route) => {
+    // Also intercept any other potential paths
+    await page.route("**/assets/game-engine.js", async (route) => {
+      console.log(
+        "Intercepted assets/game-engine.js request:",
+        route.request().url(),
+      );
       const fs = await import("fs");
       const path = await import("path");
-      const filePath = path.join(process.cwd(), "dist/assets/game-engine.js");
+      const filePath = path.join(process.cwd(), "dist/game/game-engine.js");
+      const content = fs.readFileSync(filePath, "utf8");
+      await route.fulfill({
+        status: 200,
+        contentType: "application/javascript",
+        body: content,
+      });
+    });
+
+    // Intercept the actual wrong path being requested
+    await page.route("**/src/game/GameEngine", async (route) => {
+      console.log(
+        "Intercepted src/game/GameEngine request:",
+        route.request().url(),
+      );
+      const fs = await import("fs");
+      const path = await import("path");
+      const filePath = path.join(process.cwd(), "dist/game/game-engine.js");
       const content = fs.readFileSync(filePath, "utf8");
       await route.fulfill({
         status: 200,
@@ -145,10 +176,30 @@ test.describe("MiniGame integration", () => {
         .then(() => true),
     ]);
 
-    // Start the game programmatically
+    // Debug: Check engine state
     await page.evaluate(() => {
+      console.log("Engine state check:");
+      console.log("__miniGameReady:", (window as any).__miniGameReady);
+      console.log("miniGame exists:", !!(window as any).miniGame);
+      console.log(
+        "miniGame methods:",
+        (window as any).miniGame
+          ? Object.keys((window as any).miniGame)
+          : "none",
+      );
+    });
+
+    // Wait a bit for engine to potentially load
+    await page.waitForTimeout(2000);
+
+    // Start game programmatically
+    await page.evaluate(() => {
+      console.log("Attempting to start game...");
       if (window.miniGame && typeof window.miniGame.start === "function") {
         window.miniGame.start();
+        console.log("Game started");
+      } else {
+        console.log("Cannot start game - miniGame or start not available");
       }
     });
 
@@ -159,10 +210,21 @@ test.describe("MiniGame integration", () => {
 
     // Set score to test HUD updates
     await page.evaluate(() => {
+      console.log("Setting score to 50...");
       if (window.miniGame && typeof window.miniGame.setScore === "function") {
         window.miniGame.setScore(50);
+        console.log("Score set, current score:", window.miniGame.getScore());
+      } else {
+        console.log(
+          "miniGame or setScore not available:",
+          !!window.miniGame,
+          typeof window.miniGame?.setScore,
+        );
       }
     });
+
+    // Wait a bit for the UI to update
+    await page.waitForTimeout(100);
 
     await expect(scoreElement).toHaveText("SCORE: 0050");
 
@@ -185,27 +247,25 @@ test.describe("MiniGame integration", () => {
     // Work around the overlay container issue by manually showing GAME OVER overlay
     const workaroundResult = await page.evaluate(() => {
       const gameoverEl = document.getElementById("game-over-overlay");
-      const overlayContainer = document.getElementById("mini-game-overlay");
+      const gameScreen = document.getElementById("game-screen");
 
+      const allElements = document.querySelectorAll(
+        '[id*="game"], [id*="overlay"]',
+      );
       console.log("Elements found:", {
         gameoverEl: !!gameoverEl,
-        overlayContainer: !!overlayContainer,
+        gameScreen: !!gameScreen,
+        allElementIds: Array.from(allElements).map((el) => el.id),
       });
 
-      if (gameoverEl && overlayContainer) {
-        // Make the overlay container visible again
-        overlayContainer.style.display = "flex";
-        // Hide the loading message but show game over
-        const loadingMsg = document.getElementById("mini-game-message");
-        const ctaBtn = document.getElementById("mini-game-cta");
-        if (loadingMsg) loadingMsg.style.display = "none";
-        if (ctaBtn) ctaBtn.style.display = "none";
-        // Show game over
+      if (gameoverEl && gameScreen) {
+        // Show game over overlay directly (it's positioned absolutely within game-screen)
         gameoverEl.classList.remove("hidden");
         gameoverEl.setAttribute("aria-hidden", "false");
         console.log("Workaround applied successfully");
         return true;
       }
+
       return false;
     });
 

@@ -118,29 +118,6 @@
       };
       try { window.miniGame = api; } catch (e) {}
     }
-        },
-        getHighScore: function () { return engineInstance && typeof engineInstance.getHighScore === 'function' ? engineInstance.getHighScore() : 0; },
-        resetHighScore: function () { return engineInstance && typeof engineInstance.resetHighScore === 'function' && engineInstance.resetHighScore(); },
-        isPlaying: function () { return engineInstance && typeof engineInstance.isPlaying === 'function' ? engineInstance.isPlaying() : false; },
-        isPaused: function () { return engineInstance && typeof engineInstance.isPaused === 'function' ? engineInstance.isPaused() : false; },
-        setGameSpeed: function (s) { return engineInstance && typeof engineInstance.setGameSpeed === 'function' && engineInstance.setGameSpeed(s); },
-        setScoreChangeCallback: function (cb) { return engineInstance && typeof engineInstance.setScoreChangeCallback === 'function' && engineInstance.setScoreChangeCallback(cb); },
-        raw: engineInstance,
-      };
-      try { window.miniGame = api; } catch (e) {}
-    }
-
-    // Wire engine to UI controls
-    function wireControls() {
-      if (!engine) return;
-
-      // Update score UI atomically via requestAnimationFrame
-      function updateScoreUI(score) {
-        requestAnimationFrame(function () {
-          if (scoreEl) scoreEl.textContent = "SCORE: " + String(score).padStart(4, '0');
-          dispatchGameEvent('game:score', { score: score });
-        });
-      }
 
       // Update score UI via callback (for immediate updates)
       if (engine && typeof engine.setScoreChangeCallback === 'function') {
@@ -233,7 +210,7 @@
     function loadEngine() {
       if (engineReady || loading) return Promise.resolve();
       loading = true;
-      return import('/assets/game-engine.js')
+      return import('/game/game-engine.js')
         .then(function (module) {
           var GameEngine = module.GameEngine || module.default;
           var vol = '0.3';
