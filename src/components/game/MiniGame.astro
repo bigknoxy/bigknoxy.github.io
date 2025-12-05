@@ -260,7 +260,7 @@
             window.dispatchEvent(new CustomEvent('miniGame:ready', { detail: { ready: true } }));
           } catch (e) {}
 
-          // remove LOADING overlay
+          // remove LOADING overlay completely
           var overlay = document.getElementById('mini-game-overlay');
           if (overlay) overlay.style.display = 'none';
 
