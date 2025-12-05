@@ -6,6 +6,7 @@
   "scripts": {
     "dev": "bunx astro dev",
     "build": "bunx astro build",
+    "build:game": "bunx vite build --config vite.game.config.js",
     "preview": "bunx astro preview",
     "optimize": "bunx astro build --optimize",
     "lint": "bunx prettier --write .",

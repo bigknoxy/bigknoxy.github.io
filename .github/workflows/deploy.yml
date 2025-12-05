@@ -40,6 +40,9 @@ jobs:
       - name: Build with Astro
         run: bun run build
 
+      - name: Build game bundle
+        run: bun run build:game
+
       - name: Setup Pagefind
         run: bunx pagefind --site dist --output-subdir pagefind
 
