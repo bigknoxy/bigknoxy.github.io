@@ -203,11 +203,10 @@
         }
       });
 
-      // Touch / tap to jump
-      canvas.addEventListener('touchstart', function (e) {
-        e.preventDefault();
-        if (engine && engine.inputHandler && typeof engine.inputHandler.trigger === 'function') engine.inputHandler.trigger('space');
-      }, { passive: false });
+      // Attach touch/pointer handlers to canvas element
+      if (engine && engine.inputHandler && typeof engine.inputHandler.attachToElement === 'function') {
+        engine.inputHandler.attachToElement(canvas);
+      }
 
       // Click to jump as well when user taps the canvas area
       canvas.addEventListener('click', function () {

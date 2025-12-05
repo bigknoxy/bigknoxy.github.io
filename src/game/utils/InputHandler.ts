@@ -8,6 +8,23 @@ export class InputHandler {
   private keys: InputState;
   private callbacks: Map<string, (() => void)[]>;
   private isInitialized: boolean = false;
+  private boundHandleKeyDown: (event: KeyboardEvent) => void;
+  private boundHandleKeyUp: (event: KeyboardEvent) => void;
+  private boundHandleMouseDown: (event: MouseEvent) => void;
+  private boundHandleMouseUp: (event: MouseEvent) => void;
+
+  // Element-level touch handler references
+  private elementTouchHandlers: Map<
+    HTMLElement,
+    {
+      boundTouchStart: (event: TouchEvent) => void;
+      boundTouchEnd: (event: TouchEvent) => void;
+      boundPointerDown: (event: PointerEvent) => void;
+      boundPointerUp: (event: PointerEvent) => void;
+    }
+  > = new Map();
+  private lastTriggerTime: Map<string, number> = new Map();
+  private readonly TRIGGER_DEBOUNCE_MS = 100;
 
   constructor() {
     this.keys = {
@@ -19,6 +36,12 @@ export class InputHandler {
       pause: false,
     };
     this.callbacks = new Map();
+
+    // Pre-bind handlers to ensure consistent references for add/remove
+    this.boundHandleKeyDown = this.handleKeyDown.bind(this);
+    this.boundHandleKeyUp = this.handleKeyUp.bind(this);
+    this.boundHandleMouseDown = this.handleMouseDown.bind(this);
+    this.boundHandleMouseUp = this.handleMouseUp.bind(this);
   }
 
   /**
@@ -27,17 +50,13 @@ export class InputHandler {
   public initialize(): void {
     if (this.isInitialized || typeof window === "undefined") return;
 
-    // Keyboard events
-    window.addEventListener("keydown", this.handleKeyDown.bind(this));
-    window.addEventListener("keyup", this.handleKeyUp.bind(this));
+    // Keyboard events only - touch/pointer events are handled via attachToElement
+    window.addEventListener("keydown", this.boundHandleKeyDown);
+    window.addEventListener("keyup", this.boundHandleKeyUp);
 
-    // Touch events for mobile
-    window.addEventListener("touchstart", this.handleTouchStart.bind(this));
-    window.addEventListener("touchend", this.handleTouchEnd.bind(this));
-
-    // Mouse events as fallback
-    window.addEventListener("mousedown", this.handleMouseDown.bind(this));
-    window.addEventListener("mouseup", this.handleMouseUp.bind(this));
+    // Mouse events as fallback (global)
+    window.addEventListener("mousedown", this.boundHandleMouseDown);
+    window.addEventListener("mouseup", this.boundHandleMouseUp);
 
     // Prevent context menu on long press
     window.addEventListener("contextmenu", (e) => e.preventDefault());
@@ -51,12 +70,15 @@ export class InputHandler {
   public destroy(): void {
     if (typeof window === "undefined") return;
 
-    window.removeEventListener("keydown", this.handleKeyDown.bind(this));
-    window.removeEventListener("keyup", this.handleKeyUp.bind(this));
-    window.removeEventListener("touchstart", this.handleTouchStart.bind(this));
-    window.removeEventListener("touchend", this.handleTouchEnd.bind(this));
-    window.removeEventListener("mousedown", this.handleMouseDown.bind(this));
-    window.removeEventListener("mouseup", this.handleMouseUp.bind(this));
+    window.removeEventListener("keydown", this.boundHandleKeyDown);
+    window.removeEventListener("keyup", this.boundHandleKeyUp);
+    window.removeEventListener("mousedown", this.boundHandleMouseDown);
+    window.removeEventListener("mouseup", this.boundHandleMouseUp);
+
+    // Detach from all elements
+    for (const [element] of this.elementTouchHandlers) {
+      this.detachFromElement(element);
+    }
 
     this.isInitialized = false;
   }
@@ -130,10 +152,18 @@ export class InputHandler {
   }
 
   /**
-   * Handle touch start
+   * Handle touch start (DOM-agnostic - no preventDefault)
    */
   private handleTouchStart(event: TouchEvent): void {
-    event.preventDefault();
+    // Note: preventDefault must be called by the element-level handler if needed
+
+    // Gracefully handle cases where touches might be undefined
+    if (!event.touches || event.touches.length === 0) {
+      // Fallback: treat as jump if no touch data available
+      this.keys.space = true;
+      this.triggerCallbacks("jump");
+      return;
+    }
 
     const touch = event.touches[0];
     const x = touch.clientX;
@@ -155,10 +185,10 @@ export class InputHandler {
   }
 
   /**
-   * Handle touch end
+   * Handle touch end (DOM-agnostic - no preventDefault)
    */
-  private handleTouchEnd(event: TouchEvent): void {
-    event.preventDefault();
+  private handleTouchEnd(_event: TouchEvent): void {
+    // Note: preventDefault must be called by the element-level handler if needed
 
     // Reset all touch-based inputs
     this.keys.left = false;
@@ -185,6 +215,26 @@ export class InputHandler {
     if (event.button === 0) {
       this.keys.space = false;
     }
+  }
+
+  /**
+   * Handle pointer down (unified touch/mouse/stylus input - DOM-agnostic)
+   */
+  private handlePointerDown(_event: PointerEvent): void {
+    // Note: preventDefault must be called by the element-level handler if needed
+
+    // Treat pointer down like a touch/click - trigger jump
+    this.keys.space = true;
+    this.triggerCallbacks("jump");
+  }
+
+  /**
+   * Handle pointer up (DOM-agnostic)
+   */
+  private handlePointerUp(_event: PointerEvent): void {
+    // Note: preventDefault must be called by the element-level handler if needed
+
+    this.keys.space = false;
   }
 
   /**
@@ -331,6 +381,51 @@ export class InputHandler {
   }
 
   /**
+   * Trigger action programmatically (for UI/external calls)
+   */
+  public trigger(action: string): void {
+    const now = Date.now();
+    const lastTime = this.lastTriggerTime.get(action) || 0;
+
+    // Debounce rapid repeated triggers for jump actions
+    if (action === "space" || action === "jump") {
+      if (now - lastTime < this.TRIGGER_DEBOUNCE_MS) {
+        return; // Skip duplicate triggers
+      }
+      this.lastTriggerTime.set(action, now);
+    }
+
+    switch (action.toLowerCase()) {
+      case "space":
+      case "jump":
+        this.keys.space = true;
+        this.triggerCallbacks("jump");
+        // Auto-reset space after a short delay to prevent stuck state
+        setTimeout(() => {
+          this.keys.space = false;
+        }, 50);
+        break;
+      case "left":
+        this.keys.left = true;
+        break;
+      case "right":
+        this.keys.right = true;
+        break;
+      case "up":
+        this.keys.up = true;
+        break;
+      case "down":
+        this.keys.down = true;
+        break;
+      case "pause":
+      case "start":
+        this.keys.pause = !this.keys.pause;
+        this.triggerCallbacks("pause");
+        break;
+    }
+  }
+
+  /**
    * Simulate key press (for testing)
    */
   public simulateKeyPress(key: keyof InputState, pressed: boolean): void {
@@ -405,5 +500,77 @@ export class InputHandler {
         }
       },
     };
+  }
+
+  /**
+   * Attach touch/pointer handlers to a specific element
+   * These handlers will call preventDefault() to block page scrolling
+   */
+  public attachToElement(element: HTMLElement): void {
+    if (this.elementTouchHandlers.has(element)) {
+      return; // Already attached
+    }
+
+    // Create element-specific handlers that call preventDefault
+    const boundTouchStart = (event: TouchEvent) => {
+      event.preventDefault();
+      this.handleTouchStart(event);
+    };
+
+    const boundTouchEnd = (event: TouchEvent) => {
+      event.preventDefault();
+      this.handleTouchEnd(event);
+    };
+
+    const boundPointerDown = (event: PointerEvent) => {
+      event.preventDefault();
+      this.handlePointerDown(event);
+    };
+
+    const boundPointerUp = (event: PointerEvent) => {
+      event.preventDefault();
+      this.handlePointerUp(event);
+    };
+
+    // Store handlers for later removal
+    this.elementTouchHandlers.set(element, {
+      boundTouchStart,
+      boundTouchEnd,
+      boundPointerDown,
+      boundPointerUp,
+    });
+
+    // Attach listeners with preventDefault capability
+    element.addEventListener("touchstart", boundTouchStart, { passive: false });
+    element.addEventListener("touchend", boundTouchEnd, { passive: false });
+
+    if (window.PointerEvent) {
+      element.addEventListener("pointerdown", boundPointerDown, {
+        passive: false,
+      });
+      element.addEventListener("pointerup", boundPointerUp, { passive: false });
+    }
+  }
+
+  /**
+   * Detach touch/pointer handlers from a specific element
+   */
+  public detachFromElement(element: HTMLElement): void {
+    const handlers = this.elementTouchHandlers.get(element);
+    if (!handlers) {
+      return; // Not attached
+    }
+
+    // Remove listeners
+    element.removeEventListener("touchstart", handlers.boundTouchStart);
+    element.removeEventListener("touchend", handlers.boundTouchEnd);
+
+    if (window.PointerEvent) {
+      element.removeEventListener("pointerdown", handlers.boundPointerDown);
+      element.removeEventListener("pointerup", handlers.boundPointerUp);
+    }
+
+    // Clean up stored references
+    this.elementTouchHandlers.delete(element);
   }
 }

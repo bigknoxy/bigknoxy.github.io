@@ -9,6 +9,7 @@ declare global {
       start(): void;
       pause(): void;
       reset(): void;
+      restart(): void;
       getScore(): number;
       setScore(score: number): void;
       addScore(points: number): void;
@@ -22,6 +23,7 @@ declare global {
       raw: any;
     };
     __miniGameReady?: Promise<boolean>;
+    __miniGameReadyPromise?: Promise<boolean>;
     __lastMiniGameEvent?: {
       name: string;
       detail: any;
@@ -32,6 +34,21 @@ declare global {
   interface CustomEvent<T = any> extends Event {
     detail: T;
   }
+}
+
+// InputHandler type declarations
+export interface InputHandlerType {
+  trigger(action: string): void;
+  initialize(): void;
+  destroy(): void;
+  getInputState(): any;
+  isPressed(key: string): boolean;
+  onCallback(action: string, callback: () => void): void;
+  offCallback(action: string, callback: () => void): void;
+  simulateKeyPress(key: string, pressed: boolean): void;
+  createVirtualGamepad(): any;
+  attachToElement(element: HTMLElement): void;
+  detachFromElement(element: HTMLElement): void;
 }
 
 export {};
