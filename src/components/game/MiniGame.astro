@@ -16,12 +16,16 @@
           </div>
           <button id="mini-game-cta" class="mt-3 pointer-events-auto px-4 py-2 bg-gameboy-light text-gameboy-darkest font-pixel text-sm rounded hover:bg-gameboy-lightest focus:outline-none" aria-label="Load and start game">Start Game</button>
 
-          <!-- Game Over DOM overlay (hidden until gameover) -->
-          <div id="mini-game-gameover" role="dialog" aria-modal="true" aria-hidden="true" aria-labelledby="gameover-title" class="gameover-overlay hidden pointer-events-auto text-center">
-            <h2 id="gameover-title" class="gameover-title">GAME OVER</h2>
-            <p id="gameover-score" class="gameover-score" aria-live="assertive">FINAL: 0000</p>
-            <button id="gameover-restart" class="mt-2 px-4 py-2 bg-gameboy-light text-gameboy-darkest font-pixel text-sm rounded focus:outline-none" aria-label="Restart game">Restart</button>
-          </div>
+
+        </div>
+      </div>
+
+      <!-- GAME OVER overlay at root level -->
+      <div id="game-over-overlay" class="fixed inset-0 bg-black/80 flex items-center justify-center z-50 hidden" role="dialog" aria-modal="true" aria-labelledby="gameover-title" aria-hidden="true">
+        <div class="pointer-events-auto text-center bg-[#0f381f]/90 p-4 rounded-md min-w-[160px] max-w-[90%] shadow-lg">
+          <h2 id="gameover-title" class="gameover-title">GAME OVER</h2>
+          <p id="gameover-score" class="gameover-score" aria-live="assertive">FINAL: 0000</p>
+          <button id="gameover-restart" class="mt-2 px-4 py-2 bg-gameboy-light text-gameboy-darkest font-pixel text-sm rounded focus:outline-none" aria-label="Restart game">Restart</button>
         </div>
       </div>
 
@@ -256,6 +260,8 @@
           try { 
             window.__miniGameReady = true;
             if (readyPromiseResolve) readyPromiseResolve(true);
+            // Dispatch deterministic ready signal for tests
+            window.dispatchEvent(new CustomEvent('miniGame:ready', { detail: { ready: true } }));
           } catch (e) {}
 
           // remove LOADING overlay
@@ -272,6 +278,12 @@
 
     // IntersectionObserver fallback
     function observeVisibility() {
+      // TEST_MODE_GUARD: Skip IntersectionObserver in test mode for deterministic loading
+      if (window.__TEST_MODE === true) {
+        loadEngine();
+        return;
+      }
+      
       if ('IntersectionObserver' in window) {
         var io = new IntersectionObserver(function (entries, obs) {
           entries.forEach(function (entry) {
@@ -331,7 +343,7 @@
 
     // GAME OVER overlay wiring
     (function () {
-      var gameoverEl = document.getElementById('mini-game-gameover');
+      var gameoverEl = document.getElementById('game-over-overlay');
       var scoreEl = document.getElementById('gameover-score');
       var restartBtn = document.getElementById('gameover-restart');
       var hudScore = document.getElementById('mini-game-score');
