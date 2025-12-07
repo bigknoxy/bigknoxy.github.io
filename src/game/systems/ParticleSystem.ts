@@ -16,6 +16,7 @@ interface Particle {
   color: string;
   size: number;
   active: boolean;
+  dead?: boolean; // Mark for deferred removal
 }
 
 export class ParticleSystem {
@@ -29,13 +30,17 @@ export class ParticleSystem {
   // Performance LOD
   private currentLOD: "low" | "medium" | "high" = "high";
   private maxParticlesCurrent: number;
+  private readonly DEFAULT_MAX_PARTICLES = 48;
 
   constructor(config: ParticleSystemConfig) {
     this.config = config;
-    this.maxParticlesCurrent = config.maxParticles;
+    this.maxParticlesCurrent = Math.min(
+      config.maxParticles,
+      this.DEFAULT_MAX_PARTICLES,
+    );
 
     // Initialize particle pool
-    for (let i = 0; i < config.maxParticles; i++) {
+    for (let i = 0; i < this.maxParticlesCurrent; i++) {
       this.particles.push({
         position: { x: 0, y: 0 },
         velocity: { x: 0, y: 0 },
@@ -44,6 +49,7 @@ export class ParticleSystem {
         color: "#9bbc0f",
         size: 2,
         active: false,
+        dead: false,
       });
     }
   }
@@ -57,6 +63,7 @@ export class ParticleSystem {
   ): void {
     if (!visualConfig.particleEnabled) return;
 
+    // Respect maxParticles limit and remaining capacity
     const particleCount = Math.min(
       this.config.emitCount,
       this.maxParticlesCurrent - this.activeCount,
@@ -152,7 +159,7 @@ export class ParticleSystem {
     // Update LOD based on performance
     this.updateLOD();
 
-    // Update active particles
+    // Update active particles - mark dead but don't remove during iteration
     for (let i = 0; i < this.particles.length; i++) {
       const particle = this.particles[i];
 
@@ -166,12 +173,14 @@ export class ParticleSystem {
       // Update life
       particle.life -= deltaTime;
 
-      // Deactivate dead particles
+      // Mark dead particles for deferred removal
       if (particle.life <= 0) {
-        particle.active = false;
-        this.activeCount--;
+        particle.dead = true;
       }
     }
+
+    // Compact array - remove dead particles in-place
+    this.compactParticles();
   }
 
   /**
@@ -242,7 +251,7 @@ export class ParticleSystem {
     // Find inactive particle
     for (let i = 0; i < this.particles.length; i++) {
       const particle = this.particles[i];
-      if (!particle.active) {
+      if (!particle.active && !particle.dead) {
         particle.position = { ...position };
         particle.velocity = { ...velocity };
         particle.life = this.config.particleLife;
@@ -250,6 +259,7 @@ export class ParticleSystem {
         particle.color = color;
         particle.size = 2 + Math.random() * 2;
         particle.active = true;
+        particle.dead = false;
         this.activeCount++;
         return;
       }
@@ -271,6 +281,41 @@ export class ParticleSystem {
   }
 
   /**
+   * Compact particles array - remove dead particles in-place
+   */
+  private compactParticles(): void {
+    let writeIndex = 0;
+
+    // First pass: compact active particles
+    for (let readIndex = 0; readIndex < this.particles.length; readIndex++) {
+      const particle = this.particles[readIndex];
+
+      if (particle.active && !particle.dead) {
+        // Move particle to write position if needed
+        if (readIndex !== writeIndex) {
+          this.particles[writeIndex] = particle;
+        }
+        writeIndex++;
+      } else if (particle.dead || (particle.active && particle.life <= 0)) {
+        // Reclaim dead particle
+        particle.active = false;
+        particle.dead = false;
+        this.activeCount--;
+      }
+    }
+
+    // Clear remaining slots
+    for (let i = writeIndex; i < this.particles.length; i++) {
+      const particle = this.particles[i];
+      if (particle.active) {
+        particle.active = false;
+        particle.dead = false;
+        this.activeCount--;
+      }
+    }
+  }
+
+  /**
    * Update Level of Detail based on performance
    */
   private updateLOD(): void {
@@ -280,26 +325,16 @@ export class ParticleSystem {
       (typeof navigator !== "undefined" && navigator.hardwareConcurrency <= 2)
     ) {
       this.currentLOD = "low";
-      this.maxParticlesCurrent = Math.floor(this.config.maxParticles * 0.25);
+      this.maxParticlesCurrent = Math.floor(this.DEFAULT_MAX_PARTICLES * 0.25);
     } else if (this.currentFPS < this.config.performanceThreshold * 1.5) {
       this.currentLOD = "medium";
-      this.maxParticlesCurrent = Math.floor(this.config.maxParticles * 0.6);
+      this.maxParticlesCurrent = Math.floor(this.DEFAULT_MAX_PARTICLES * 0.6);
     } else {
       this.currentLOD = "high";
-      this.maxParticlesCurrent = this.config.maxParticles;
+      this.maxParticlesCurrent = this.DEFAULT_MAX_PARTICLES;
     }
 
-    // Clean up excess particles if LOD decreased
-    if (this.maxParticlesCurrent < this.activeCount) {
-      let excess = this.activeCount - this.maxParticlesCurrent;
-      for (let i = this.particles.length - 1; i >= 0 && excess > 0; i--) {
-        const particle = this.particles[i];
-        if (particle.active) {
-          particle.active = false;
-          this.activeCount--;
-          excess--;
-        }
-      }
-    }
+    // Safe LOD reduction - only affect new emissions, don't kill active particles
+    // Active particles will expire naturally through the compaction system
   }
 }

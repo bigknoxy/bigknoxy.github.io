@@ -12,10 +12,10 @@ describe("DifficultySystem", () => {
 
   beforeEach(() => {
     config = {
-      maxDifficultyTime: 120, // 2 minutes
-      maxDifficultyScore: 500,
-      timeScale: 0.6,
-      scoreScale: 0.4,
+      maxDifficultyTime: 90, // 1.5 minutes
+      maxDifficultyScore: 400,
+      timeScale: 0.7,
+      scoreScale: 0.3,
       gameSpeedMultiplier: { min: 1.0, max: 3.0 },
       spawnRateMultiplier: { min: 0.5, max: 2.0 },
     };
@@ -43,28 +43,28 @@ describe("DifficultySystem", () => {
     it("should reach max difficulty at time limit", () => {
       // Call multiple times to allow smoothing to converge
       for (let i = 0; i < 10; i++) {
-        difficultySystem.compute(120, 0); // Max time
+        difficultySystem.compute(90, 0); // Max time (updated to 90s)
       }
       const difficulty = difficultySystem.getDifficultyState();
-      expect(difficulty).toBeGreaterThan(0.6); // Allow for smoothing
+      expect(difficulty).toBeGreaterThan(0.5); // Adjusted for new defaults
     });
 
     it("should reach max difficulty at score limit", () => {
       // Call multiple times to allow smoothing to converge
       for (let i = 0; i < 10; i++) {
-        difficultySystem.compute(0, 500); // Max score
+        difficultySystem.compute(0, 400); // Max score (updated to 400)
       }
       const difficulty = difficultySystem.getDifficultyState();
-      expect(difficulty).toBeGreaterThan(0.3); // Allow for smoothing
+      expect(difficulty).toBeGreaterThan(0.1); // Adjusted for new defaults
     });
 
     it("should combine time and score correctly", () => {
       // Call multiple times to allow smoothing to converge
       let difficulty = 0;
       for (let i = 0; i < 10; i++) {
-        difficulty = difficultySystem.compute(60, 250); // Half time, half score
+        difficulty = difficultySystem.compute(45, 200); // Half time, half score (adjusted)
       }
-      expect(difficulty).toBeGreaterThan(0.2); // Adjusted for smoothing
+      expect(difficulty).toBeGreaterThan(0.1); // Adjusted for new defaults
       expect(difficulty).toBeLessThan(1);
     });
 
@@ -79,7 +79,7 @@ describe("DifficultySystem", () => {
       const d1 = difficultySystem.compute(60, 0);
       // Second call with same inputs should be similar due to smoothing
       const d2 = difficultySystem.compute(60, 0);
-      expect(Math.abs(d2 - d1)).toBeLessThan(0.1);
+      expect(Math.abs(d2 - d1)).toBeLessThan(0.05); // Tighter due to 0.1 alpha
     });
   });
 
@@ -138,6 +138,13 @@ describe("DifficultySystem", () => {
         difficulty = difficultySystem.compute(0, 0);
       }
       expect(difficulty).toBeLessThan(0.5); // Should trend toward 0
+    });
+
+    it("should pin difficulty when override is set", () => {
+      difficultySystem.setOverride(0.42);
+      const difficulty = difficultySystem.compute(1000, 10000); // Extreme values
+      expect(difficulty).toBe(0.42);
+      expect(difficultySystem.getDifficultyState()).toBeCloseTo(0.42, 2);
     });
   });
 

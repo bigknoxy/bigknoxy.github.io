@@ -21,8 +21,9 @@ export class RenderSystem {
   private flashColor: string = "#ff0000";
 
   // Glow cache for collectibles
-  private glowCache: Map<string, OffscreenCanvas> = new Map();
-  private readonly maxGlowCacheSize = 20;
+  private glowCache: Map<string, OffscreenCanvas | HTMLCanvasElement> =
+    new Map();
+  private readonly MAX_GLOW_CACHE_SIZE = 15;
 
   constructor(
     ctx: CanvasRenderingContext2D,
@@ -481,40 +482,70 @@ export class RenderSystem {
     let glowCanvas = this.glowCache.get(cacheKey);
 
     if (!glowCanvas) {
-      // Create new glow canvas
-      glowCanvas = new OffscreenCanvas(size + 8, size + 8);
-      const glowCtx = glowCanvas.getContext("2d")!;
+      // Feature detection for OffscreenCanvas
+      const supportsOffscreen =
+        typeof OffscreenCanvas !== "undefined" &&
+        typeof OffscreenCanvas.prototype.getContext === "function";
 
-      // Draw glow
-      const gradient = glowCtx.createRadialGradient(
-        size / 2 + 4,
-        size / 2 + 4,
-        0,
-        size / 2 + 4,
-        size / 2 + 4,
-        size / 2 + 4,
-      );
-
-      if (type === "commit") {
-        gradient.addColorStop(0, "rgba(155, 188, 15, 0.3)");
-        gradient.addColorStop(1, "rgba(155, 188, 15, 0)");
-      } else {
-        gradient.addColorStop(0, "rgba(139, 172, 15, 0.3)");
-        gradient.addColorStop(1, "rgba(139, 172, 15, 0)");
-      }
-
-      glowCtx.fillStyle = gradient;
-      glowCtx.fillRect(0, 0, size + 8, size + 8);
-
-      // Manage cache size
-      if (this.glowCache.size >= this.maxGlowCacheSize) {
-        const firstKey = this.glowCache.keys().next().value;
-        if (firstKey) {
-          this.glowCache.delete(firstKey);
+      // Create new glow canvas with fallback
+      try {
+        if (supportsOffscreen) {
+          glowCanvas = new OffscreenCanvas(size + 8, size + 8);
+        } else if (typeof document !== "undefined") {
+          // Fallback to regular canvas
+          glowCanvas = document.createElement("canvas");
+          glowCanvas.width = size + 8;
+          glowCanvas.height = size + 8;
+        } else {
+          // SSR environment - skip glow
+          return;
         }
-      }
 
-      this.glowCache.set(cacheKey, glowCanvas);
+        const glowCtx = glowCanvas.getContext("2d");
+        if (!glowCtx) {
+          return; // Failed to get context, skip glow
+        }
+
+        // Draw glow
+        const gradient = glowCtx.createRadialGradient(
+          size / 2 + 4,
+          size / 2 + 4,
+          0,
+          size / 2 + 4,
+          size / 2 + 4,
+          size / 2 + 4,
+        );
+
+        if (type === "commit") {
+          gradient.addColorStop(0, "rgba(155, 188, 15, 0.3)");
+          gradient.addColorStop(1, "rgba(155, 188, 15, 0)");
+        } else {
+          gradient.addColorStop(0, "rgba(139, 172, 15, 0.3)");
+          gradient.addColorStop(1, "rgba(139, 172, 15, 0)");
+        }
+
+        glowCtx.fillStyle = gradient;
+        glowCtx.fillRect(0, 0, size + 8, size + 8);
+
+        // Atomic cache insertion - manage cache size first, then set
+        if (this.glowCache.size >= this.MAX_GLOW_CACHE_SIZE) {
+          const firstKey = this.glowCache.keys().next().value;
+          if (firstKey) {
+            this.glowCache.delete(firstKey);
+          }
+        }
+
+        this.glowCache.set(cacheKey, glowCanvas);
+      } catch (error) {
+        // OffscreenCanvas creation failed - skip glow silently
+        console.warn("RenderSystem: Failed to create glow canvas:", error);
+        return;
+      }
+    }
+
+    // Defensive check - ensure we have a valid canvas before drawing
+    if (!glowCanvas) {
+      return;
     }
 
     // Draw the cached glow

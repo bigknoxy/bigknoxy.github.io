@@ -16,11 +16,11 @@ describe("ParticleSystem", () => {
 
   beforeEach(() => {
     config = {
-      maxParticles: 32,
-      performanceThreshold: 30,
+      maxParticles: 48,
+      performanceThreshold: 45,
       gravity: 0.2,
       particleLife: 1.0,
-      emitCount: 8,
+      emitCount: 12,
       colors: {
         collect: ["#9bbc0f", "#8bac0f", "#306230"],
         jump: ["#8bac0f", "#306230"],
@@ -121,6 +121,39 @@ describe("ParticleSystem", () => {
 
       // All particles should be dead
       expect(particleSystem.getActiveCount()).toBe(0);
+    });
+
+    it("should not modify array mid-iteration during compaction", () => {
+      const position = { x: 100, y: 100 };
+
+      // Emit particles to fill array
+      for (let i = 0; i < 3; i++) {
+        particleSystem.emitCollect(position, visualConfig);
+      }
+
+      const initialCount = particleSystem.getActiveCount();
+
+      // Update multiple times - should not cause issues
+      for (let i = 0; i < 10; i++) {
+        particleSystem.update(100); // 100ms
+      }
+
+      // Should gracefully handle all updates without errors
+      expect(particleSystem.getActiveCount()).toBeLessThanOrEqual(initialCount);
+    });
+
+    it("should respect maxParticles limit in emitCollect", () => {
+      const position = { x: 100, y: 100 };
+
+      // Try to emit more than max particles
+      for (let i = 0; i < 10; i++) {
+        particleSystem.emitCollect(position, visualConfig);
+      }
+
+      // Should never exceed max particles
+      expect(particleSystem.getActiveCount()).toBeLessThanOrEqual(
+        config.maxParticles,
+      );
     });
   });
 

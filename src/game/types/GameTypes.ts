@@ -169,20 +169,20 @@ export const DEFAULT_COLLECTIBLE_VISUALS: CollectibleVisualConfig = {
 };
 
 export const DEFAULT_DIFFICULTY_CONFIG: DifficultyConfig = {
-  maxDifficultyTime: 120, // 2 minutes to max difficulty
-  maxDifficultyScore: 500, // 500 points to max difficulty
-  timeScale: 0.6, // Time has 60% weight
-  scoreScale: 0.4, // Score has 40% weight
+  maxDifficultyTime: 90, // 1.5 minutes to max difficulty
+  maxDifficultyScore: 400, // 400 points to max difficulty
+  timeScale: 0.7, // Time has 70% weight
+  scoreScale: 0.3, // Score has 30% weight
   gameSpeedMultiplier: { min: 1.0, max: 3.0 },
   spawnRateMultiplier: { min: 0.5, max: 2.0 },
 };
 
 export const DEFAULT_PARTICLE_SYSTEM_CONFIG: ParticleSystemConfig = {
-  maxParticles: 64,
-  performanceThreshold: 30, // Reduce particles below 30 FPS
+  maxParticles: 48,
+  performanceThreshold: 45, // Reduce particles below 45 FPS
   gravity: 0.2,
   particleLife: 1.0, // 1 second
-  emitCount: 8,
+  emitCount: 12, // Default emit count for 'star' collectibles
   colors: {
     collect: ["#9bbc0f", "#8bac0f", "#306230"],
     jump: ["#8bac0f", "#306230"],

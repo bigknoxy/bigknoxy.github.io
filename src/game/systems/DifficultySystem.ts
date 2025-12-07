@@ -39,8 +39,8 @@ export class DifficultySystem {
     // Apply easing function for smooth progression
     const output = this.easeInOutQuad(this.clamp(combined, 0, 1));
 
-    // Apply smoothing to avoid jarring difficulty changes
-    this.difficultyState = this.lerp(this.difficultyState, output, 0.25);
+    // Apply smoothing to avoid jarring difficulty changes (less laggy)
+    this.difficultyState = this.lerp(this.difficultyState, output, 0.1);
 
     return this.difficultyState;
   }
