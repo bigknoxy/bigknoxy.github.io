@@ -12,10 +12,16 @@ export class Collectible extends Entity {
   public animationTimer: number = 0;
   public collected: boolean = false;
 
+  // Enhanced visual state
+  public spawnTime: number = 0;
+  public pulsePhase: number = 0;
+  public bobOffset: number = 0;
+
   constructor(config: CollectibleConfig) {
     super(config, "collectible");
     this.collectibleType = config.type;
     this.points = config.points;
+    this.spawnTime = performance.now();
   }
 
   /**
@@ -157,6 +163,24 @@ export class Collectible extends Entity {
     this.position.y = y;
     this.active = true;
     this.collected = false;
+    this.spawnTime = performance.now();
+    this.onSpawn();
+  }
+
+  /**
+   * Called when collectible is spawned
+   */
+  public onSpawn(): void {
+    // Hook for particle effects and audio
+    // This will be called by GameEngine
+  }
+
+  /**
+   * Called when collectible is collected
+   */
+  public onCollect(): void {
+    // Hook for particle effects and audio
+    // This will be called by GameEngine
   }
 
   /**

@@ -8,6 +8,7 @@ import { Collectible } from "./entities/Collectible";
 import { PhysicsSystem } from "./systems/PhysicsSystem";
 import { RenderSystem } from "./systems/RenderSystem";
 import { AudioSystem } from "./systems/AudioSystem";
+import { DifficultySystem } from "./systems/DifficultySystem";
 import { InputHandler } from "./utils/InputHandler";
 import { EntityPool } from "./utils/ObjectPool";
 import type {
@@ -28,6 +29,7 @@ export class GameEngine {
   private physicsSystem: PhysicsSystem;
   private renderSystem: RenderSystem;
   private audioSystem: AudioSystem;
+  private difficultySystem: DifficultySystem | null = null;
 
   // Unified ground Y coordinate - aligns visual ground with physics
   private readonly GROUND_Y: number;
@@ -51,6 +53,9 @@ export class GameEngine {
   // High score
   private highScoreKey: string = "miniGameHighScore";
   private onScoreChangeCallback?: (score: number) => void;
+
+  // Difficulty tracking
+  private previousDifficultyBand: number = 0;
 
   constructor(config: GameEngineConfig) {
     this.ctx = config.canvas.getContext("2d")!;
@@ -79,6 +84,11 @@ export class GameEngine {
       config.render,
     );
     this.audioSystem = new AudioSystem(config.audio);
+
+    // Initialize difficulty system if config provided
+    if (config.difficultyConfig) {
+      this.difficultySystem = new DifficultySystem(config.difficultyConfig);
+    }
 
     // Initialize object pools
     this.obstacles = new EntityPool<Obstacle>(
@@ -360,8 +370,31 @@ export class GameEngine {
    * Spawn new entities
    */
   private spawnEntities(): void {
-    // Spawn obstacles
-    if (Math.random() < this.config.spawnRate) {
+    // Get difficulty multiplier if available
+    let spawnMultiplier = 1.0;
+    if (this.difficultySystem) {
+      const currentTimeSeconds = this.state.frameCount / 60; // Approximate time
+      const difficulty = this.difficultySystem.compute(
+        currentTimeSeconds,
+        this.state.score,
+      );
+      spawnMultiplier = this.difficultySystem.getSpawnRateMultiplier();
+
+      // Dispatch difficulty events at 10% increments
+      const currentBand = Math.floor(difficulty * 10);
+      if (currentBand > this.previousDifficultyBand) {
+        this.previousDifficultyBand = currentBand;
+        this.emitEvent({
+          type: "gamestart", // Reuse existing event type for difficulty milestone
+          data: { difficulty, band: currentBand },
+          timestamp: Date.now(),
+        });
+      }
+    }
+
+    // Spawn obstacles with difficulty scaling
+    const obstacleSpawnRate = this.config.spawnRate * spawnMultiplier;
+    if (Math.random() < obstacleSpawnRate) {
       const obstacle = this.obstacles.acquire();
       const type = Math.random() > 0.5 ? "bug" : "error";
       const config: ObstacleConfig = {
@@ -374,8 +407,9 @@ export class GameEngine {
       (obstacle as any).obstacleType = type;
     }
 
-    // Spawn collectibles
-    if (Math.random() < this.config.spawnRate * 0.5) {
+    // Spawn collectibles with difficulty scaling
+    const collectibleSpawnRate = this.config.spawnRate * 0.5 * spawnMultiplier;
+    if (Math.random() < collectibleSpawnRate) {
       const collectible = this.collectibles.acquire();
       const type = Math.random() > 0.5 ? "commit" : "star";
       const config: CollectibleConfig = {
@@ -682,6 +716,15 @@ export class GameEngine {
   public setScore(score: number): void {
     this.state.score = Math.max(0, score);
     this.notifyScoreChange();
+  }
+
+  /**
+   * Set difficulty override for testing
+   */
+  public setDifficultyOverride(override: number | null): void {
+    if (this.difficultySystem) {
+      this.difficultySystem.setOverride(override);
+    }
   }
 
   /**

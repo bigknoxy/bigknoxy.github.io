@@ -111,9 +111,81 @@ export interface RenderConfig {
   doubleBuffering: boolean;
 }
 
+export interface CollectibleVisualConfig {
+  glowEnabled: boolean;
+  particleEnabled: boolean;
+  pulseEnabled: boolean;
+  bobEnabled: boolean;
+  lodLevels: {
+    low: { maxParticles: number; glowEnabled: boolean };
+    medium: { maxParticles: number; glowEnabled: boolean };
+    high: { maxParticles: number; glowEnabled: boolean };
+  };
+}
+
+export interface DifficultyConfig {
+  maxDifficultyTime: number; // seconds to reach max difficulty
+  maxDifficultyScore: number; // score to reach max difficulty
+  timeScale: number; // weight of time-based difficulty (0-1)
+  scoreScale: number; // weight of score-based difficulty (0-1)
+  gameSpeedMultiplier: { min: number; max: number };
+  spawnRateMultiplier: { min: number; max: number };
+}
+
+export interface ParticleSystemConfig {
+  maxParticles: number;
+  performanceThreshold: number; // FPS below which to reduce particles
+  gravity: number;
+  particleLife: number; // seconds
+  emitCount: number;
+  colors: {
+    collect: string[];
+    jump: string[];
+    gameover: string[];
+  };
+}
+
 export interface GameEngineConfig extends GameConfig {
   audio: AudioConfig;
   render: RenderConfig;
   canvas: HTMLCanvasElement;
   onScoreChange?: (score: number) => void;
+  difficultyConfig?: DifficultyConfig;
+  particleSystemConfig?: ParticleSystemConfig;
+  collectibleVisualConfig?: CollectibleVisualConfig;
 }
+
+// Default configurations
+export const DEFAULT_COLLECTIBLE_VISUALS: CollectibleVisualConfig = {
+  glowEnabled: true,
+  particleEnabled: true,
+  pulseEnabled: true,
+  bobEnabled: true,
+  lodLevels: {
+    low: { maxParticles: 4, glowEnabled: false },
+    medium: { maxParticles: 8, glowEnabled: true },
+    high: { maxParticles: 16, glowEnabled: true },
+  },
+};
+
+export const DEFAULT_DIFFICULTY_CONFIG: DifficultyConfig = {
+  maxDifficultyTime: 90, // 1.5 minutes to max difficulty
+  maxDifficultyScore: 400, // 400 points to max difficulty
+  timeScale: 0.7, // Time has 70% weight
+  scoreScale: 0.3, // Score has 30% weight
+  gameSpeedMultiplier: { min: 1.0, max: 3.0 },
+  spawnRateMultiplier: { min: 0.5, max: 2.0 },
+};
+
+export const DEFAULT_PARTICLE_SYSTEM_CONFIG: ParticleSystemConfig = {
+  maxParticles: 48,
+  performanceThreshold: 45, // Reduce particles below 45 FPS
+  gravity: 0.2,
+  particleLife: 1.0, // 1 second
+  emitCount: 12, // Default emit count for 'star' collectibles
+  colors: {
+    collect: ["#9bbc0f", "#8bac0f", "#306230"],
+    jump: ["#8bac0f", "#306230"],
+    gameover: ["#306230", "#0f380f"],
+  },
+};
