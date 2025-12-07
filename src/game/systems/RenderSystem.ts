@@ -2,8 +2,13 @@
  * Render System - Handles all rendering operations
  */
 
-import type { Vector2D, RenderConfig } from "../types/GameTypes";
+import type {
+  Vector2D,
+  RenderConfig,
+  CollectibleVisualConfig,
+} from "../types/GameTypes";
 import { Entity } from "../entities/Entity";
+import { Collectible } from "../entities/Collectible";
 
 export class RenderSystem {
   private ctx: CanvasRenderingContext2D;
@@ -14,6 +19,10 @@ export class RenderSystem {
   private backBufferCanvas: HTMLCanvasElement | null = null;
   private flashAlpha: number = 0;
   private flashColor: string = "#ff0000";
+
+  // Glow cache for collectibles
+  private glowCache: Map<string, OffscreenCanvas> = new Map();
+  private readonly maxGlowCacheSize = 20;
 
   constructor(
     ctx: CanvasRenderingContext2D,
@@ -391,5 +400,152 @@ export class RenderSystem {
     ctx.moveTo(x1, y1);
     ctx.lineTo(x2, y2);
     ctx.stroke();
+  }
+
+  /**
+   * Draw collectible with enhanced visuals
+   */
+  public drawCollectible(
+    ctx: CanvasRenderingContext2D,
+    collectible: Collectible,
+    _deltaMs: number,
+    visualsConfig: CollectibleVisualConfig,
+  ): void {
+    const now = performance.now();
+    const spawnTime = (collectible as any).spawnTime || now;
+    const age = now - spawnTime;
+
+    // Calculate animations
+    let pulseScale = 1.0;
+    let bobOffset = 0;
+
+    // Respect user preferences
+    const prefersReducedMotion =
+      typeof window !== "undefined" &&
+      window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+    if (!prefersReducedMotion) {
+      // Pulse animation (sine wave, 1.0 -> 1.15, 700ms period)
+      if (visualsConfig.pulseEnabled) {
+        const pulsePhase = ((age % 700) / 700) * Math.PI * 2;
+        pulseScale = 1.0 + Math.sin(pulsePhase) * 0.075; // 1.0 -> 1.075 -> 1.0
+      }
+
+      // Bob animation (±4px over 2000ms)
+      if (visualsConfig.bobEnabled) {
+        const bobPhase = ((age % 2000) / 2000) * Math.PI * 2;
+        bobOffset = Math.sin(bobPhase) * 4;
+      }
+    }
+
+    // Apply LOD settings
+    const lodLevel = this.getLODLevel();
+    const lodConfig = visualsConfig.lodLevels[lodLevel];
+
+    // Draw glow if enabled and LOD allows
+    if (visualsConfig.glowEnabled && lodConfig.glowEnabled) {
+      this.drawCollectibleGlow(ctx, collectible, pulseScale);
+    }
+
+    // Apply transformations
+    ctx.save();
+    ctx.translate(
+      collectible.position.x + collectible.size.width / 2,
+      collectible.position.y + collectible.size.height / 2 + bobOffset,
+    );
+    ctx.scale(pulseScale, pulseScale);
+    ctx.translate(
+      -(collectible.position.x + collectible.size.width / 2),
+      -(collectible.position.y + collectible.size.height / 2 + bobOffset),
+    );
+
+    // Draw the collectible
+    collectible.render(ctx);
+
+    ctx.restore();
+  }
+
+  /**
+   * Draw glow effect for collectible
+   */
+  private drawCollectibleGlow(
+    ctx: CanvasRenderingContext2D,
+    collectible: Collectible,
+    scale: number,
+  ): void {
+    const type = ((collectible as any).collectibleType as string) || "commit";
+    const size = Math.round(collectible.size.width * scale);
+    const cacheKey = `${type}_${size}`;
+
+    // Check cache first
+    let glowCanvas = this.glowCache.get(cacheKey);
+
+    if (!glowCanvas) {
+      // Create new glow canvas
+      glowCanvas = new OffscreenCanvas(size + 8, size + 8);
+      const glowCtx = glowCanvas.getContext("2d")!;
+
+      // Draw glow
+      const gradient = glowCtx.createRadialGradient(
+        size / 2 + 4,
+        size / 2 + 4,
+        0,
+        size / 2 + 4,
+        size / 2 + 4,
+        size / 2 + 4,
+      );
+
+      if (type === "commit") {
+        gradient.addColorStop(0, "rgba(155, 188, 15, 0.3)");
+        gradient.addColorStop(1, "rgba(155, 188, 15, 0)");
+      } else {
+        gradient.addColorStop(0, "rgba(139, 172, 15, 0.3)");
+        gradient.addColorStop(1, "rgba(139, 172, 15, 0)");
+      }
+
+      glowCtx.fillStyle = gradient;
+      glowCtx.fillRect(0, 0, size + 8, size + 8);
+
+      // Manage cache size
+      if (this.glowCache.size >= this.maxGlowCacheSize) {
+        const firstKey = this.glowCache.keys().next().value;
+        if (firstKey) {
+          this.glowCache.delete(firstKey);
+        }
+      }
+
+      this.glowCache.set(cacheKey, glowCanvas);
+    }
+
+    // Draw the cached glow
+    ctx.save();
+    ctx.globalAlpha = 0.6;
+    ctx.drawImage(
+      glowCanvas,
+      collectible.position.x - 4,
+      collectible.position.y - 4,
+    );
+    ctx.restore();
+  }
+
+  /**
+   * Get current LOD level based on performance
+   */
+  private getLODLevel(): "low" | "medium" | "high" {
+    // Simple LOD detection - could be enhanced with actual FPS monitoring
+    if (
+      typeof navigator !== "undefined" &&
+      navigator.hardwareConcurrency <= 2
+    ) {
+      return "low";
+    }
+    return "high";
+  }
+
+  /**
+   * Clear glow cache (call when destroying render system)
+   */
+  public clearGlowCache(): void {
+    this.glowCache.clear();
   }
 }
