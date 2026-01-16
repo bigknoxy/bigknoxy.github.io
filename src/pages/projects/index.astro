@@ -6,43 +6,39 @@ import MiniGame from '../../components/game/MiniGame.astro';
 const projects = await getCollection('projects');
 ---
 
-<BaseLayout title="Projects - BigKnoxy Portfolio">
-  <main class="container mx-auto px-4 py-16">
-    <h1 class="text-4xl font-pixel text-gameboy-lightest mb-8">PROJECTS</h1>
-    
-    <div class="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
-      {projects.map((project) => (
-        <article class="bg-tokyo-surface border border-tokyo-border rounded-lg p-6 hover:border-gameboy-light transition-colors">
-          <h2 class="text-xl font-pixel text-gameboy-light mb-2">{project.data.title}</h2>
-          <p class="text-tokyo-text mb-4">{project.data.description}</p>
-          
-          <div class="flex gap-2 mb-4">
-            {project.data.tags.map((tag) => (
-              <span class="text-xs px-2 py-1 bg-tokyo-border text-tokyo-text rounded">
-                {tag}
-              </span>
-            ))}
-          </div>
-          
-          <div class="flex gap-4 text-sm">
-            {project.data.demoUrl && (
-              <a href={project.data.demoUrl} class="text-gameboy-light hover:text-gameboy-lightest">
-                Demo
-              </a>
-            )}
-            {project.data.repoUrl && (
-              <a href={project.data.repoUrl} class="text-gameboy-light hover:text-gameboy-lightest">
-                Code
-              </a>
-            )}
-          </div>
-        </article>
-      ))}
-    </div>
-    
-    <!-- Mini Game Section -->
-    <div class="mt-16">
-      <MiniGame class="mx-auto" />
+<BaseLayout title="Projects | Joshua Knox">
+  <main class="container mx-auto px-4 py-16 md:py-24">
+    <div class="max-w-6xl mx-auto">
+      <h1 class="text-4xl md:text-5xl font-pixel text-gameboy-lightest mb-12">PROJECTS</h1>
+      
+      <div class="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
+        {projects.map((project) => (
+          <a 
+            href={`/projects/${project.slug}`} 
+            class="group block bg-tokyo-surface border border-tokyo-border rounded-xl p-8 hover:border-gameboy-light transition-all hover:shadow-xl hover:shadow-gameboy-light/5 transform hover:-translate-y-1"
+          >
+            <h2 class="text-2xl font-pixel text-gameboy-light mb-4 group-hover:text-gameboy-lightest transition-colors">
+              {project.data.title}
+            </h2>
+            <p class="text-tokyo-text mb-6 line-clamp-3 leading-relaxed">
+              {project.data.description}
+            </p>
+            
+            <div class="flex flex-wrap gap-2 mb-8">
+              {project.data.tags.map((tag) => (
+                <span class="text-xs px-2 py-1 bg-tokyo-bg text-tokyo-muted rounded border border-tokyo-border">
+                  {tag}
+                </span>
+              ))}
+            </div>
+            
+            <div class="flex items-center gap-4 text-sm font-semibold text-gameboy-light group-hover:text-gameboy-lightest transition-colors mt-auto">
+              <span>View Details</span>
+              <span class="group-hover:translate-x-1 transition-transform">→</span>
+            </div>
+          </a>
+        ))}
+      </div>
     </div>
   </main>
 </BaseLayout>

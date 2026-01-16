@@ -21,7 +21,8 @@ export default {
       },
       fontFamily: {
         'pixel': ['"Press Start 2P"', 'monospace'],
-        'mono': ['"JetBrains Mono"', 'monospace']
+        'mono': ['"JetBrains Mono"', 'monospace'],
+        'sans': ['"Outfit"', 'sans-serif']
       }
     },
   },

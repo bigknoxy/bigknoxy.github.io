@@ -1,0 +1,86 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import { getCollection } from 'astro:content';
+import type { CollectionEntry } from 'astro:content';
+
+export async function getStaticPaths() {
+  const projects = await getCollection('projects');
+  return projects.map((project) => ({
+    params: { slug: project.slug },
+    props: { project },
+  }));
+}
+
+const { project }: { project: CollectionEntry<'projects'> } = Astro.props;
+const { Content } = await project.render();
+---
+
+<BaseLayout title={`${project.data.title} | Joshua Knox`}>
+  <main class="container mx-auto px-4 py-16 md:py-24">
+    <div class="max-w-4xl mx-auto">
+      <!-- Back to Projects -->
+      <nav class="mb-8">
+        <a href="/projects" class="text-gameboy-light hover:text-gameboy-lightest flex items-center gap-2 group transition-colors">
+          <span class="group-hover:-translate-x-1 transition-transform">←</span> Back to Projects
+        </a>
+      </nav>
+
+      <!-- Project Header -->
+      <header class="mb-12">
+        <h1 class="text-4xl md:text-6xl font-pixel text-gameboy-lightest mb-6 leading-tight">{project.data.title}</h1>
+        <p class="text-xl md:text-2xl text-tokyo-text mb-8 leading-relaxed max-w-3xl">{project.data.description}</p>
+        
+        {project.data.heroImage && (
+          <div class="mb-12 rounded-xl overflow-hidden border border-tokyo-border shadow-2xl">
+            <img 
+              src={project.data.heroImage} 
+              alt={`${project.data.title} project screenshot`}
+              class="w-full h-auto"
+              loading="eager"
+            />
+          </div>
+        )}
+        
+        <div class="flex flex-wrap gap-4 mb-8">
+          {project.data.tags.map((tag) => (
+            <span class="px-3 py-1 bg-tokyo-surface text-gameboy-light rounded border border-tokyo-border text-sm font-mono">
+              {tag}
+            </span>
+          ))}
+        </div>
+
+        <!-- Project Links -->
+        <div class="flex flex-wrap gap-6 text-lg">
+          {project.data.demoUrl && (
+            <a 
+              href={project.data.demoUrl} 
+              target="_blank" 
+              rel="noopener noreferrer"
+              class="bg-gameboy-dark text-white px-6 py-3 rounded-lg font-pixel text-sm hover:bg-gameboy-light transition-all transform hover:scale-105 shadow-lg flex items-center gap-3"
+            >
+              <span>🚀</span> Live Demo
+            </a>
+          )}
+          {project.data.repoUrl && (
+            <a 
+              href={project.data.repoUrl} 
+              target="_blank" 
+              rel="noopener noreferrer"
+              class="border-2 border-gameboy-light text-gameboy-light px-6 py-3 rounded-lg font-pixel text-sm hover:border-gameboy-lightest hover:text-gameboy-lightest transition-all transform hover:scale-105 flex items-center gap-3"
+            >
+              <span>💻</span> Source Code
+            </a>
+          )}
+        </div>
+      </header>
+
+      <!-- Project Content -->
+      <article class="prose prose-invert prose-lg max-w-none prose-headings:font-pixel prose-headings:text-gameboy-lightest prose-a:text-gameboy-light prose-a:no-underline hover:prose-a:underline prose-img:rounded-xl">
+        <Content />
+      </article>
+      
+      <!-- Mini Game Section (Removed from here too as per polish request focus on professional content) -->
+      <!-- <div class="mt-16">...</div> -->
+    </div>
+  </main>
+</BaseLayout>
