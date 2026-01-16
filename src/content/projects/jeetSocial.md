@@ -4,15 +4,13 @@ description: "A safe, anonymous social network dedicated to spreading kindness a
 pubDate: 2026-01-15
 heroImage: "/assets/images/projects/jeetsocial/hero-new.png"
 tags:
-  - "Python"
-  - "Flask"
+  - "Bun"
+  - "Hono"
+  - "React"
   - "TypeScript"
-  - "Socket.IO"
-  - "PostgreSQL"
-  - "Redis"
+  - "SQLite"
+  - "WebSockets"
   - "Docker"
-  - "Privacy"
-  - "Realtime"
   - "AI Moderation"
 demoUrl: "https://jeetsocial.com/"
 repoUrl: "https://github.com/bigknoxy/jeetSocial2"
@@ -31,9 +29,9 @@ Social platforms often reward engagement at the cost of empathy. JeetSocial flip
 
 - **Fully Anonymous Interaction**: No PII collection; whimsical random usernames (e.g., "SunnyAxolotl99") are assigned to protect user identity.
 - **AI-Powered Moderation**: Advanced automated filtering to block hate speech and bullying, ensuring the platform remains a safe haven for positivity.
-- **Real-time Engine**: Built with Python (Flask) and Socket.IO for low-latency updates, scaled horizontally via Redis pub/sub.
+- **Real-time Engine**: Built with **Bun** and **Hono** for high-performance WebSockets, ensuring instant updates.
 - **Privacy-First Engineering**: Ephemeral session tokens and conservative retention policies minimize linkability and lower re-identification risk.
-- **Responsive Architecture**: Progressive-enhancement TypeScript frontend for a fast, accessible UX that feels alive.
+- **Responsive Architecture**: Progressive-enhancement **React** frontend for a fast, accessible UX that feels alive.
 
 ## Kindness by Design
 

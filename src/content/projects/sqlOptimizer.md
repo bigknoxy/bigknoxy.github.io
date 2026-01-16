@@ -40,4 +40,3 @@ featured: true
 
 Explore the live tool: [SQL Optimizer Pro Live](https://bigknoxy.github.io/sqlOptimizer/)
 Check out the source: [GitHub Repository](https://github.com/bigknoxy/sqlOptimizer)
----
