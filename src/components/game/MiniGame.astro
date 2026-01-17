@@ -3,10 +3,10 @@
 // SSR-safe Astro component that lazy-loads the GameEngine on visibility or user gesture
 ---
 
-<div id="mini-game-root" class="game-container w-full max-w-2xl mx-auto p-4" role="region" aria-label="Code Runner mini game">
+<div id="mini-game-root" class="game-container w-full max-w-2xl mx-auto" role="region" aria-label="Code Runner mini game">
   <!-- SSR fallback / placeholder -->
   <div class="bg-tokyo-surface border-2 border-gameboy-light rounded-lg p-4 text-center">
-    <div class="mx-auto max-w-xs">
+    <div class="mx-auto w-full" style="max-width: min(320px, 100%)">
       <div id="game-screen" class="game-screen bg-gameboy-darkest rounded relative mx-auto" style="width:100%;">
         <canvas id="mini-game-canvas" width="240" height="216" aria-hidden="true" class="pixel-perfect w-full h-auto mx-auto block" style="aspect-ratio: 240 / 216;"></canvas>
 
