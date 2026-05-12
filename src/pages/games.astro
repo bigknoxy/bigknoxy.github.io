@@ -3,12 +3,14 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
 import { getCollection } from 'astro:content';
 
 const games = await getCollection('projects', ({ data }) => {
-  return data.tags?.includes('Game') || 
-         data.tags?.includes('game') ||
-         data.title?.toLowerCase().includes('game') ||
-         data.title === 'chicken-mob' ||
-         data.title === 'chop-it-like-its-hawt' ||
-         data.title === 'chopIt';
+  const tags = data.tags || [];
+  const title = data.title || '';
+  return tags.includes('Game') || 
+         tags.includes('game') ||
+         title.toLowerCase().includes('game') ||
+         title === 'chicken-mob' ||
+         title === 'chop-it-like-its-hawt' ||
+         title === 'chopIt';
 });
 
 // Sort by featured first, then by date
