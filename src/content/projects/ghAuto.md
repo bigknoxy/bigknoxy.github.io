@@ -1,10 +1,9 @@
-featured: false
 ---
 title: "ghAuto"
 description: "GitHub repository management and analysis tool. Automate repo maintenance, analyze codebases, and generate reports."
+pubDate: 2026-04-01
 tags: ["Python", "GitHub API", "Automation"]
 repoUrl: "https://github.com/bigknoxy/ghAuto"
-pubDate: 2026-04-01
 heroImage: "/assets/images/projects/ghauto-hero.png"
 featured: false
 ---
@@ -41,4 +40,3 @@ pip install ghauto
 ghauto auth
 ghauto analyze --user bigknoxy
 ```
-

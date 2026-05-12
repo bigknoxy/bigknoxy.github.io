@@ -1,10 +1,9 @@
-featured: false
 ---
 title: "joshify"
 description: "A beautiful terminal Spotify client built with Rust. Features album art, lyrics, and playlist management in your terminal."
+pubDate: 2026-04-01
 tags: ["Rust", "TUI", "Spotify API"]
 repoUrl: "https://github.com/bigknoxy/joshify"
-pubDate: 2026-04-01
 heroImage: "/assets/images/projects/joshify-hero.png"
 featured: false
 ---
@@ -43,4 +42,3 @@ cargo install joshify
 joshify auth
 joshify
 ```
-

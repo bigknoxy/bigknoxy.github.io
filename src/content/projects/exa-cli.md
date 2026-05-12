@@ -1,10 +1,9 @@
-featured: false
 ---
 title: "exa-cli"
 description: "CLI wrapper for Exa MCP tools. Search, crawl, and research the web from your terminal with AI-powered results."
+pubDate: 2026-04-01
 tags: ["TypeScript", "Exa API", "MCP"]
 repoUrl: "https://github.com/bigknoxy/exa-cli"
-pubDate: 2026-04-01
 heroImage: "/assets/images/projects/exa-cli-hero.png"
 featured: false
 ---
@@ -42,4 +41,3 @@ npm install -g @bigknoxy/exa-cli
 exa auth
 exa search "agentic development frameworks"
 ```
-
