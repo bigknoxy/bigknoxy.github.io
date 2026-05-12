@@ -1,9 +1,11 @@
 ---
 title: "joshbot"
 description: "A lightweight personal AI assistant with self-learning, long-term memory, and terminal-native interface. Built in Go."
-tech: ["Go", "AI/LLM", "CLI"]
-github: "https://github.com/bigknoxy/joshbot"
+pubDate: 2026-04-15
+tags: ["Go", "AI/LLM", "CLI"]
+repoUrl: "https://github.com/bigknoxy/joshbot"
 heroImage: "/assets/images/projects/joshbot-hero.png"
+featured: false
 ---
 
 ## Your Terminal-Based AI Companion

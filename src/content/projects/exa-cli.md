@@ -1,9 +1,12 @@
+featured: false
 ---
 title: "exa-cli"
 description: "CLI wrapper for Exa MCP tools. Search, crawl, and research the web from your terminal with AI-powered results."
-tech: ["TypeScript", "Exa API", "MCP"]
-github: "https://github.com/bigknoxy/exa-cli"
+tags: ["TypeScript", "Exa API", "MCP"]
+repoUrl: "https://github.com/bigknoxy/exa-cli"
+pubDate: 2026-04-01
 heroImage: "/assets/images/projects/exa-cli-hero.png"
+featured: false
 ---
 
 ## AI-Powered Web Research
