@@ -1,9 +1,11 @@
 ---
 title: "CarePathAI"
 description: "AI-powered healthcare pathway optimization. Helps healthcare providers make data-driven decisions for patient care."
-tech: ["Python", "AI/ML", "Healthcare"]
-github: "https://github.com/bigknoxy/CarePathAI"
+pubDate: 2026-04-01
+tags: ["Python", "AI/ML", "Healthcare"]
+repoUrl: "https://github.com/bigknoxy/CarePathAI"
 heroImage: "/assets/images/projects/carepathai-hero.png"
+featured: false
 ---
 
 ## AI for Healthcare
@@ -37,4 +39,3 @@ Early deployments have shown:
 - 15% reduction in readmissions
 - 20% improvement in pathway adherence
 - 25% faster time to appropriate care
-

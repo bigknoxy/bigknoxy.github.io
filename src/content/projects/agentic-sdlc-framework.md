@@ -1,9 +1,11 @@
 ---
 title: "Agentic SDLC Framework"
 description: "Production-ready agentic SDLC framework with built-in governance, security scanning, and audit trails for regulated environments."
-tech: ["Python", "AI/LLM", "Compliance"]
-github: "https://github.com/bigknoxy/agentic-sdlc-framework"
+pubDate: 2026-04-01
+tags: ["Python", "AI/LLM", "Compliance"]
+repoUrl: "https://github.com/bigknoxy/agentic-sdlc-framework"
 heroImage: "/assets/images/projects/sdlc-hero.png"
+featured: false
 ---
 
 ## The FRAME Loop
@@ -34,4 +36,3 @@ In regulated industries, speed and compliance are often at odds. This framework 
 - SQLite for audit logging
 - Docker for isolation
 - GitHub Actions for CI/CD
-
