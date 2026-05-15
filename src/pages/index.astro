@@ -24,10 +24,10 @@ function fileName(title: string): string {
 ---
 
 <BaseLayout title="Joshua Knox - Senior Software Engineer | Problem Solver">
-  <main class="relative z-10 max-w-[1100px] mx-auto px-10">
+  <main class="relative z-10 max-w-[1100px] mx-auto px-4 sm:px-6 md:px-10">
 
     <!-- ── HERO ── -->
-    <section class="py-[88px] pb-[72px] border-b border-phosphor-border grid grid-cols-1 md:grid-cols-[1fr_380px] gap-16 items-center">
+    <section class="py-12 md:py-[88px] pb-10 md:pb-[72px] border-b border-phosphor-border grid grid-cols-1 md:grid-cols-[1fr_380px] gap-8 md:gap-16 items-center">
       <!-- Left: identity -->
       <div>
         <div class="text-[11px] text-phosphor-text mb-7 tracking-wider">
@@ -110,10 +110,9 @@ function fileName(title: string): string {
     </section>
 
     <!-- ── MINI GAME ── -->
-    <section class="py-16 border-b border-phosphor-border">
+    <section class="py-12 md:py-16 border-b border-phosphor-border">
       <SectionHeader label="TAKE_A_BREAK.EXE" />
-      <div class="terminal-window inline-block overflow-hidden">
-        <TerminalBar title="MINIGAME.SYS" />
+      <div class="flex justify-center">
         <MiniGame />
       </div>
     </section>
