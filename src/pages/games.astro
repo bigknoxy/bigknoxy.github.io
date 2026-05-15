@@ -1,126 +1,104 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
+import SectionHeader from '../components/layout/SectionHeader.astro';
+import TerminalBar from '../components/layout/TerminalBar.astro';
+import Tag from '../components/ui/Tag.astro';
 import { getCollection } from 'astro:content';
+
+const SPECIAL_GAME_TITLES = new Set(['chicken-mob', 'chop-it-like-its-hawt', 'chopIt']);
 
 const games = await getCollection('projects', ({ data }) => {
   const tags = data.tags || [];
   const title = data.title || '';
-  return tags.includes('Game') || 
-         tags.includes('game') ||
-         title.toLowerCase().includes('game') ||
-         title === 'chicken-mob' ||
-         title === 'chop-it-like-its-hawt' ||
-         title === 'chopIt';
+  return (
+    tags.includes('Game') ||
+    tags.includes('game') ||
+    title.toLowerCase().includes('game') ||
+    SPECIAL_GAME_TITLES.has(title)
+  );
 });
 
-// Sort by featured first, then by date
 const sortedGames = games.sort((a, b) => {
-  if (a.data.featured && !b.data.featured) return -1;
-  if (!a.data.featured && b.data.featured) return 1;
+  if (a.data.featured !== b.data.featured) return a.data.featured ? -1 : 1;
   return new Date(b.data.pubDate).getTime() - new Date(a.data.pubDate).getTime();
 });
 
-const gameIcons: Record<string, string> = {
-  'chicken-mob': '🐔',
-  'chop-it-like-its-hawt': '🪓',
-  'chopIt': '🔥',
-  'code-runner': '🏃',
-  'default': '🎮'
-};
+function fileName(title: string): string {
+  return title.toUpperCase().replace(/\s+/g, '_');
+}
+
+function isGameTag(tag: string): boolean {
+  return tag !== 'Game' && tag !== 'game';
+}
 ---
 
-<BaseLayout title="Games | Joshua Knox - Game Dev Experiments">
-  <main class="container mx-auto px-4 py-16 md:py-24">
-    <div class="max-w-6xl mx-auto">
-      <!-- Arcade Header -->
-      <div class="text-center mb-16">
-        <div class="inline-block bg-tokyo-surface border-2 border-gameboy-light rounded-lg p-6 mb-6 shadow-lg shadow-gameboy-light/20">
-          <h1 class="text-5xl md:text-7xl font-pixel text-gameboy-lightest mb-4 tracking-wider">
-            ARCADE
-          </h1>
-          <div class="flex items-center justify-center gap-4 text-gameboy-light">
-            <span class="text-2xl">👾</span>
-            <span class="font-pixel text-sm tracking-widest">INSERT COIN TO PLAY</span>
-            <span class="text-2xl">👾</span>
-          </div>
-        </div>
-        <p class="text-tokyo-muted text-lg max-w-2xl mx-auto">
-          A collection of browser-based games and experiments. Mostly built to learn things, 
-          occasionally built just for fun. No quarters required.
+<BaseLayout title="Games | Joshua Knox">
+  <main class="relative z-10 max-w-[1100px] mx-auto px-10 py-16">
+
+    <SectionHeader label="ARCADE.EXE" marginClass="mb-12" />
+
+    <div class="terminal-window mb-10">
+      <TerminalBar title="ARCADE.SYS" />
+      <div class="p-8 text-center">
+        <h1 class="font-pixel text-phosphor-bright glow-text-bright mb-4 tracking-wider" style="font-size: clamp(18px, 4vw, 36px);">
+          ARCADE
+        </h1>
+        <p class="text-[13px] text-phosphor-text leading-[1.9] max-w-2xl mx-auto">
+          Browser-based games and experiments. Mostly built to learn things,
+          occasionally just for fun. No quarters required.
         </p>
-      </div>
-
-      <!-- Games Grid -->
-      <div class="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
-        {sortedGames.map((game) => {
-          const icon = gameIcons[game.data.title] || gameIcons['default'];
-          return (
-            <a 
-              href={game.data.demoUrl || game.data.repoUrl || `/projects/${game.slug}`}
-              target={game.data.demoUrl ? "_blank" : undefined}
-              rel={game.data.demoUrl ? "noopener noreferrer" : undefined}
-              class="group block bg-tokyo-surface border-2 border-tokyo-border rounded-xl overflow-hidden hover:border-gameboy-light transition-all hover:shadow-xl hover:shadow-gameboy-light/10 transform hover:-translate-y-2"
-            >
-              {/* Game Card Header */}
-              <div class="bg-gradient-to-br from-gameboy-dark to-tokyo-surface p-8 text-center border-b border-tokyo-border">
-                <div class="text-6xl mb-4 transform group-hover:scale-110 transition-transform">
-                  {icon}
-                </div>
-                <h2 class="text-2xl font-pixel text-gameboy-lightest group-hover:text-gameboy-light transition-colors">
-                  {game.data.title}
-                </h2>
-              </div>
-              
-              {/* Game Card Body */}
-              <div class="p-6">
-                <p class="text-tokyo-text mb-6 line-clamp-3 leading-relaxed">
-                  {game.data.description}
-                </p>
-                
-                <div class="flex flex-wrap gap-2 mb-6">
-                  {game.data.tags.filter(t => t !== 'Game' && t !== 'game').map((tag) => (
-                    <span class="text-xs px-2 py-1 bg-tokyo-bg text-tokyo-muted rounded border border-tokyo-border font-pixel">
-                      {tag}
-                    </span>
-                  ))}
-                </div>
-                
-                <div class="flex items-center justify-between">
-                  <span class="text-gameboy-light font-pixel text-sm group-hover:text-gameboy-lightest transition-colors">
-                    {game.data.demoUrl ? 'PLAY NOW →' : 'VIEW PROJECT →'}
-                  </span>
-                  {game.data.featured && (
-                    <span class="text-xs bg-gameboy-light/20 text-gameboy-light px-2 py-1 rounded font-pixel">
-                      ⭐ FEATURED
-                    </span>
-                  )}
-                </div>
-              </div>
-            </a>
-          );
-        })}
-      </div>
-
-      {/* Code Runner - Homepage Game Teaser */}
-      <div class="mt-16 bg-tokyo-surface border-2 border-tokyo-border rounded-xl p-8 text-center">
-        <div class="text-4xl mb-4">🏃</div>
-        <h3 class="text-2xl font-pixel text-gameboy-lightest mb-2">Code Runner</h3>
-        <p class="text-tokyo-muted mb-4">
-          The mini-game on my homepage. Jump over bugs, collect features, ship code!
-        </p>
-        <a 
-          href="/" 
-          class="inline-block bg-gameboy-light/20 hover:bg-gameboy-light/30 text-gameboy-light font-pixel px-6 py-3 rounded transition-colors"
-        >
-          PLAY ON HOMEPAGE →
-        </a>
-      </div>
-
-      {/* Footer Note */}
-      <div class="mt-16 text-center text-tokyo-muted text-sm">
-        <p class="font-pixel mb-2">HIGH SCORE: 9999</p>
-        <p>Built with TypeScript, Canvas, and too much caffeine.</p>
       </div>
     </div>
+
+    <div class="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+      {sortedGames.map((game) => {
+        const href = game.data.demoUrl || game.data.repoUrl || `/projects/${game.slug}`;
+        const isExternal = Boolean(game.data.demoUrl);
+        const ctaLabel = game.data.demoUrl ? 'play --now →' : 'view --project →';
+        return (
+          <a
+            href={href}
+            target={isExternal ? '_blank' : undefined}
+            rel={isExternal ? 'noopener noreferrer' : undefined}
+            class="terminal-window block no-underline transition-all duration-200 group hover:border-phosphor-green"
+            style="text-decoration: none;"
+          >
+            <TerminalBar title={`${fileName(game.data.title)}.ROM`} />
+            <div class="p-7">
+              <h2 class="font-pixel text-[10px] text-phosphor-bright group-hover:glow-text mb-3 leading-[1.7] tracking-wide transition-all">
+                {game.data.title}
+              </h2>
+              <p class="text-[12px] text-phosphor-text leading-[1.9] mb-5 line-clamp-3">
+                {game.data.description}
+              </p>
+              <div class="flex flex-wrap gap-2 mb-5">
+                {game.data.tags.filter(isGameTag).map((tag: string) => <Tag label={tag} />)}
+              </div>
+              <div class="text-[10px] text-phosphor-dim group-hover:text-phosphor-green transition-colors tracking-wider">
+                <span class="text-phosphor-faint">$</span> {ctaLabel}
+              </div>
+            </div>
+          </a>
+        );
+      })}
+    </div>
+
+    <!-- Code Runner teaser -->
+    <div class="terminal-window mt-10">
+      <TerminalBar title="CODE_RUNNER.ROM" />
+      <div class="p-8 text-center">
+        <h3 class="font-pixel text-[12px] text-phosphor-bright glow-text mb-3">Code Runner</h3>
+        <p class="text-[13px] text-phosphor-text leading-[1.9] mb-6">
+          The mini-game on my homepage. Jump over bugs, collect features, ship code!
+        </p>
+        <a href="/" class="btn-ghost-phosphor">play on homepage</a>
+      </div>
+    </div>
+
+    <div class="mt-10 text-center text-phosphor-text text-[10px] tracking-widest">
+      <div class="font-pixel mb-2">HIGH SCORE: 9999</div>
+      <div>Built with TypeScript, Canvas API, and too much caffeine.</div>
+    </div>
+
   </main>
 </BaseLayout>

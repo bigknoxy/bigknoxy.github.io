@@ -1,0 +1,15 @@
+---
+// Breadcrumb-style back link: "← cd /<path>".
+export interface Props {
+  href: string;
+  label: string;
+}
+
+const { href, label } = Astro.props;
+---
+
+<div class="mb-8 text-[11px]">
+  <a href={href} class="text-phosphor-dim hover:text-phosphor-bright transition-colors tracking-wider">
+    <span class="text-phosphor-faint">←</span> cd {label}
+  </a>
+</div>

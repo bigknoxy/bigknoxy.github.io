@@ -1,117 +1,124 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
 import Footer from '../components/layout/Footer.astro';
+import SectionHeader from '../components/layout/SectionHeader.astro';
+import TerminalBar from '../components/layout/TerminalBar.astro';
 import MiniGame from '../components/game/MiniGame.astro';
+import Tag from '../components/ui/Tag.astro';
 import { getCollection } from 'astro:content';
 
-const projects = await getCollection('projects', ({ data }) => {
-  return data.featured === true;
-});
+const projects = await getCollection('projects', ({ data }) => data.featured === true);
 
-// Skills data
 const skills = [
-  { name: 'C#', icon: '💻' },
-  { name: '.NET', icon: '🌐' },
-  { name: 'Cloud (AWS/Azure)', icon: '☁️' },
-  { name: 'AI/LLMs', icon: '🤖' },
-  { name: 'Systems Architecture', icon: '🏗️' },
-  { name: 'Security & Privacy', icon: '🛡️' }
+  { name: 'C# / .NET', pct: '95%' },
+  { name: 'AI / LLMs', pct: '88%' },
+  { name: 'Cloud (AWS/Azure)', pct: '90%' },
+  { name: 'Architecture', pct: '93%' },
+  { name: 'Security & Privacy', pct: '82%' },
+  { name: 'TypeScript', pct: '78%' },
 ];
+
+function fileName(title: string): string {
+  return title.toUpperCase().replace(/\s+/g, '_');
+}
 ---
 
 <BaseLayout title="Joshua Knox - Senior Software Engineer | Problem Solver">
-  <main class="container mx-auto px-4 py-16 md:py-24">
-    <div class="max-w-4xl mx-auto">
-      <!-- Hero Section -->
-      <section class="text-center mb-24">
-        <h1 class="text-5xl md:text-7xl font-pixel text-gameboy-lightest mb-8 leading-tight">
-          JOSH KNOX
+  <main class="relative z-10 max-w-[1100px] mx-auto px-10">
+
+    <!-- ── HERO ── -->
+    <section class="py-[88px] pb-[72px] border-b border-phosphor-border grid grid-cols-1 md:grid-cols-[1fr_380px] gap-16 items-center">
+      <!-- Left: identity -->
+      <div>
+        <div class="text-[11px] text-phosphor-text mb-7 tracking-wider">
+          <span class="text-phosphor-bright glow-text">josh@bigknoxy:~$</span>&nbsp;./init --mode=portfolio --env=prod
+        </div>
+
+        <h1 class="font-pixel text-phosphor-bright glow-text-bright mb-7 leading-[1.3] tracking-wide" style="font-size: clamp(26px, 4vw, 48px);">
+          JOSH<br>KNOX<span class="cursor-blink"></span>
         </h1>
-        <p class="text-2xl md:text-3xl font-semibold text-gameboy-light mb-8 max-w-3xl mx-auto leading-relaxed">
-          Senior Software Engineer | Problem Solver | Building with Kindness & Precision
-        </p>
-        <p class="text-xl text-tokyo-text mb-12 max-w-2xl mx-auto leading-relaxed">
-          With over 18 years of experience, I am a software developer dedicated to solving complex technical problems through a lens of technical excellence and human kindness.
-        </p>
-        
-        <div class="flex flex-wrap justify-center gap-4">
-          <a href="/projects" class="px-8 py-4 bg-gameboy-dark text-white font-pixel text-sm rounded-lg hover:bg-gameboy-light transition-all transform hover:scale-105 shadow-lg">
-            VIEW PROJECTS
-          </a>
-          <a href="/blog" class="px-8 py-4 border-2 border-gameboy-light text-gameboy-light font-pixel text-sm rounded-lg hover:border-gameboy-lightest hover:text-gameboy-lightest transition-all transform hover:scale-105">
-            READ BLOG
-          </a>
-        </div>
-      </section>
 
-      <!-- Skills / Expertise -->
-      <section class="mb-24 px-6 py-12 bg-tokyo-surface/50 border border-tokyo-border rounded-2xl">
-        <h2 class="text-2xl font-pixel text-gameboy-lightest mb-12 text-center">CORE EXPERTISE</h2>
-        <div class="grid grid-cols-2 md:grid-cols-3 gap-8">
-          {skills.map(skill => (
-            <div class="flex flex-col items-center text-center group">
-              <span class="text-4xl mb-4 group-hover:scale-110 transition-transform">
-                {skill.icon}
-              </span>
-              <span class="text-lg font-semibold text-tokyo-text">{skill.name}</span>
-            </div>
-          ))}
+        <div class="text-[11px] text-phosphor-green mb-5 tracking-widest">
+          <span class="text-phosphor-text">title:</span>&nbsp;Innovation Engineer &amp; Sr. Software Developer
         </div>
-      </section>
 
-      <!-- Featured Projects Section -->
-      <section class="mb-24">
-        <div class="flex items-center justify-between mb-12">
-          <h2 class="text-3xl font-pixel text-gameboy-lightest">FEATURED WORK</h2>
-          <a href="/projects" class="text-gameboy-light hover:text-gameboy-lightest transition-colors font-semibold">
-            All Projects →
-          </a>
+        <p class="text-[13px] text-phosphor-text leading-[1.9] mb-11 max-w-[520px]">
+          18 years of shipping things that matter. Building AI systems, distributed
+          architecture, and developer tooling — with the conviction that great software
+          is both technically excellent and deeply human.
+        </p>
+
+        <div class="flex gap-4 flex-wrap items-center">
+          <a href="/projects" class="btn-phosphor">VIEW WORK</a>
+          <a href="/blog" class="btn-ghost-phosphor">cat blog</a>
         </div>
-        
-        <div class="grid gap-8 md:grid-cols-2">
-          {projects.map((project) => (
-            <a 
-              href={`/projects/${project.slug}`} 
-              class="group block bg-tokyo-surface border border-tokyo-border rounded-xl overflow-hidden hover:border-gameboy-light transition-all hover:shadow-2xl hover:shadow-gameboy-light/10"
-            >
-              <div class="aspect-video overflow-hidden">
-                <img 
-                  src={project.data.heroImage} 
-                  alt={project.data.title}
-                  class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                />
-              </div>
-              <div class="p-8">
-                <h3 class="text-2xl font-pixel text-gameboy-light mb-4 group-hover:text-gameboy-lightest transition-colors">
-                  {project.data.title}
-                </h3>
-                <p class="text-tokyo-text mb-6 line-clamp-2 leading-relaxed">
-                  {project.data.description}
-                </p>
-                <div class="flex flex-wrap gap-2">
-                  {project.data.tags.slice(0, 4).map((tag) => (
-                    <span class="text-xs px-2 py-1 bg-tokyo-bg text-tokyo-muted rounded border border-tokyo-border">
-                      {tag}
-                    </span>
-                  ))}
+      </div>
+
+      <!-- Right: STATS.SYS terminal panel -->
+      <div class="terminal-window">
+        <TerminalBar title="STATS.SYS" />
+        <div class="p-6">
+          <div class="text-[11px] text-phosphor-text mb-4">
+            <span class="text-phosphor-bright glow-text">$</span> josh --skills --verbose
+          </div>
+          <div class="flex flex-col gap-[14px]">
+            {skills.map((skill) => (
+              <div class="flex flex-col gap-[6px]">
+                <div class="flex justify-between text-[10px]">
+                  <span class="text-phosphor-green">{skill.name}</span>
+                  <span class="text-phosphor-text">{skill.pct}</span>
+                </div>
+                <div class="h-[4px] bg-phosphor-faint relative overflow-hidden">
+                  <div
+                    class="absolute inset-y-0 left-0 bg-phosphor-green stat-bar-fill"
+                    style={`box-shadow: 0 0 6px #9bbc0f; --pct: ${skill.pct};`}
+                  ></div>
                 </div>
               </div>
-            </a>
-          ))}
+            ))}
+          </div>
         </div>
-      </section>
-      
-      <section class="mb-24 text-center">
-        <h2 class="text-2xl font-pixel text-gameboy-lightest mb-12">TAKE A BREAK</h2>
-        <div class="inline-block bg-tokyo-surface border-2 border-tokyo-border rounded-xl overflow-hidden">
-           <MiniGame class="mx-auto" />
-        </div>
-      </section>
-      
-      <div class="text-center text-tokyo-muted pb-12">
       </div>
-    </div>
+    </section>
+
+    <!-- ── FEATURED WORK ── -->
+    <section class="py-16 border-b border-phosphor-border">
+      <SectionHeader label="FEATURED.LOG" linkHref="/projects" linkText="all_projects →" />
+
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        {projects.map((project) => (
+          <a
+            href={`/projects/${project.slug}`}
+            class="terminal-window block no-underline transition-all duration-200 group hover:border-phosphor-green"
+            style="text-decoration: none;"
+          >
+            <TerminalBar title={`${fileName(project.data.title)}.EXE`} groupHover />
+            <div class="p-7 group-hover:glow-border transition-all">
+              <h3 class="font-pixel text-[10px] text-phosphor-bright group-hover:glow-text mb-[14px] leading-[1.7] tracking-wide transition-all">
+                {project.data.title}
+              </h3>
+              <p class="text-[12px] text-phosphor-text leading-[1.9] mb-[22px] line-clamp-3">
+                {project.data.description}
+              </p>
+              <div class="flex flex-wrap gap-2">
+                {project.data.tags.slice(0, 4).map((tag) => <Tag label={tag} />)}
+              </div>
+            </div>
+          </a>
+        ))}
+      </div>
+    </section>
+
+    <!-- ── MINI GAME ── -->
+    <section class="py-16 border-b border-phosphor-border">
+      <SectionHeader label="TAKE_A_BREAK.EXE" />
+      <div class="terminal-window inline-block overflow-hidden">
+        <TerminalBar title="MINIGAME.SYS" />
+        <MiniGame />
+      </div>
+    </section>
+
   </main>
-  
+
   <Footer />
 </BaseLayout>

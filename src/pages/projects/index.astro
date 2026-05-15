@@ -1,44 +1,46 @@
 ---
 import BaseLayout from '../../layouts/BaseLayout.astro';
+import SectionHeader from '../../components/layout/SectionHeader.astro';
+import TerminalBar from '../../components/layout/TerminalBar.astro';
+import Tag from '../../components/ui/Tag.astro';
 import { getCollection } from 'astro:content';
-import MiniGame from '../../components/game/MiniGame.astro';
 
 const projects = await getCollection('projects');
+
+function fileName(title: string): string {
+  return title.toUpperCase().replace(/\s+/g, '_');
+}
 ---
 
 <BaseLayout title="Projects | Joshua Knox">
-  <main class="container mx-auto px-4 py-16 md:py-24">
-    <div class="max-w-6xl mx-auto">
-      <h1 class="text-4xl md:text-5xl font-pixel text-gameboy-lightest mb-12">PROJECTS</h1>
-      
-      <div class="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
-        {projects.map((project) => (
-          <a 
-            href={`/projects/${project.slug}`} 
-            class="group block bg-tokyo-surface border border-tokyo-border rounded-xl p-8 hover:border-gameboy-light transition-all hover:shadow-xl hover:shadow-gameboy-light/5 transform hover:-translate-y-1"
-          >
-            <h2 class="text-2xl font-pixel text-gameboy-light mb-4 group-hover:text-gameboy-lightest transition-colors">
+  <main class="relative z-10 max-w-[1100px] mx-auto px-10 py-16">
+
+    <SectionHeader label="PROJECTS.LOG" marginClass="mb-12" />
+
+    <div class="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+      {projects.map((project) => (
+        <a
+          href={`/projects/${project.slug}`}
+          class="terminal-window block no-underline transition-all duration-200 group hover:border-phosphor-green"
+          style="text-decoration: none;"
+        >
+          <TerminalBar title={`${fileName(project.data.title)}.EXE`} />
+          <div class="p-7">
+            <h2 class="font-pixel text-[10px] text-phosphor-bright group-hover:glow-text mb-3 leading-[1.7] tracking-wide transition-all">
               {project.data.title}
             </h2>
-            <p class="text-tokyo-text mb-6 line-clamp-3 leading-relaxed">
+            <p class="text-[12px] text-phosphor-text leading-[1.9] mb-5 line-clamp-3">
               {project.data.description}
             </p>
-            
-            <div class="flex flex-wrap gap-2 mb-8">
-              {project.data.tags.map((tag) => (
-                <span class="text-xs px-2 py-1 bg-tokyo-bg text-tokyo-muted rounded border border-tokyo-border">
-                  {tag}
-                </span>
-              ))}
+            <div class="flex flex-wrap gap-2 mb-5">
+              {project.data.tags.map((tag) => <Tag label={tag} />)}
             </div>
-            
-            <div class="flex items-center gap-4 text-sm font-semibold text-gameboy-light group-hover:text-gameboy-lightest transition-colors mt-auto">
-              <span>View Details</span>
-              <span class="group-hover:translate-x-1 transition-transform">→</span>
+            <div class="text-[10px] text-phosphor-dim group-hover:text-phosphor-green transition-colors">
+              <span class="text-phosphor-faint">$</span> view --details →
             </div>
-          </a>
-        ))}
-      </div>
+          </div>
+        </a>
+      ))}
     </div>
   </main>
 </BaseLayout>

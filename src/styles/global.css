@@ -6,37 +6,265 @@
 
 @layer base {
   body {
-    @apply font-sans;
+    @apply font-mono bg-phosphor-bg text-phosphor-green;
+    font-size: 13px;
+    line-height: 1.7;
   }
 }
 
-/* Custom GameBoy LCD effect */
-.gameboy-lcd {
-  background: linear-gradient(135deg, #9bbc0f 0%, #8bac0f 50%, #9bbc0f 100%);
-  filter: contrast(1.2) brightness(1.1);
+/* ─── CRT Scanlines ─── */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background: repeating-linear-gradient(
+    0deg,
+    transparent,
+    transparent 2px,
+    rgba(0, 0, 0, 0.06) 2px,
+    rgba(0, 0, 0, 0.06) 4px
+  );
+  pointer-events: none;
+  z-index: 9999;
 }
 
-/* Pixel perfect rendering */
+/* ─── CRT Vignette ─── */
+body::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background: radial-gradient(ellipse at center, transparent 55%, rgba(0, 0, 0, 0.75) 100%);
+  pointer-events: none;
+  z-index: 9998;
+}
+
+/* ─── Phosphor grid bg ─── */
+.phosphor-grid {
+  position: fixed;
+  inset: 0;
+  background-image:
+    linear-gradient(rgba(155, 188, 15, 0.035) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(155, 188, 15, 0.035) 1px, transparent 1px);
+  background-size: 48px 48px;
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* ─── Phosphor glow utilities ─── */
+@layer utilities {
+  .glow-text {
+    text-shadow:
+      0 0 8px #9bbc0f,
+      0 0 24px rgba(155, 188, 15, 0.35);
+  }
+
+  .glow-text-bright {
+    text-shadow:
+      0 0 12px #b8e010,
+      0 0 40px rgba(184, 224, 16, 0.5),
+      0 0 80px rgba(184, 224, 16, 0.2);
+  }
+
+  .glow-border {
+    box-shadow:
+      0 0 24px rgba(155, 188, 15, 0.25),
+      inset 0 0 40px rgba(155, 188, 15, 0.015);
+  }
+}
+
+/* ─── Terminal window chrome ─── */
+.terminal-window {
+  @apply bg-phosphor-surface border border-phosphor-border;
+}
+
+.terminal-bar {
+  @apply bg-phosphor-faint border-b border-phosphor-border;
+  padding: 10px 16px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.terminal-dot {
+  width: 7px;
+  height: 7px;
+  background: #5a7a08;
+  display: inline-block;
+  flex-shrink: 0;
+}
+
+.terminal-bar-title {
+  @apply font-pixel text-phosphor-text;
+  font-size: 7px;
+  letter-spacing: 0.08em;
+}
+
+/* ─── Blinking cursor ─── */
+.cursor-blink {
+  display: inline-block;
+  width: 3px;
+  height: 0.85em;
+  background: #b8e010;
+  box-shadow: 0 0 8px #9bbc0f;
+  margin-left: 4px;
+  vertical-align: middle;
+  animation: cursorBlink 1.1s step-end infinite;
+}
+
+@keyframes cursorBlink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0; }
+}
+
+/* ─── Stat bar fill animation ─── */
+.stat-bar-fill {
+  animation: fillBar 1.8s ease-out forwards;
+}
+
+@keyframes fillBar {
+  from { width: 0; }
+  to { width: var(--pct); }
+}
+
+/* ─── Status dot pulse ─── */
+.status-dot {
+  width: 6px;
+  height: 6px;
+  background: #9bbc0f;
+  box-shadow: 0 0 6px #9bbc0f;
+  display: inline-block;
+  animation: statusPulse 2s ease-in-out infinite;
+}
+
+@keyframes statusPulse {
+  0%, 100% { opacity: 1; box-shadow: 0 0 6px #9bbc0f; }
+  50% { opacity: 0.3; box-shadow: none; }
+}
+
+/* ─── Nav link prompt prefix ─── */
+.nav-link::before {
+  content: '> ';
+  color: #2e3e06;
+}
+
+/* ─── Phosphor buttons ─── */
+.btn-phosphor {
+  padding: 13px 28px;
+  background: #9bbc0f;
+  color: #060a06;
+  font-family: 'Press Start 2P', monospace;
+  font-size: 9px;
+  letter-spacing: 0.06em;
+  text-decoration: none;
+  display: inline-block;
+  box-shadow: 0 0 14px rgba(155, 188, 15, 0.35), 0 0 40px rgba(155, 188, 15, 0.1);
+  transition: all 0.15s;
+}
+
+.btn-phosphor:hover {
+  background: #b8e010;
+  box-shadow: 0 0 24px #9bbc0f, 0 0 60px rgba(155, 188, 15, 0.35);
+}
+
+.btn-ghost-phosphor {
+  padding: 13px 28px;
+  border: 1px solid #6a8a0a;
+  color: #6a8a0a;
+  font-size: 11px;
+  letter-spacing: 0.06em;
+  text-decoration: none;
+  display: inline-block;
+  transition: all 0.15s;
+  font-family: 'JetBrains Mono', monospace;
+}
+
+.btn-ghost-phosphor::before {
+  content: '$ ';
+  color: #5a7a08;
+}
+
+.btn-ghost-phosphor:hover {
+  border-color: #9bbc0f;
+  color: #b8e010;
+  text-shadow: 0 0 6px #9bbc0f;
+}
+
+/* ─── Section rule ─── */
+.section-rule {
+  flex: 1;
+  height: 1px;
+  background: linear-gradient(90deg, #6a8a0a, transparent);
+}
+
+/* ─── Pixel-perfect image rendering ─── */
 .pixel-perfect {
   image-rendering: pixelated;
   image-rendering: -moz-crisp-edges;
   image-rendering: crisp-edges;
 }
 
-/* Custom scrollbar */
+/* ─── Custom scrollbar ─── */
 ::-webkit-scrollbar {
-  width: 8px;
+  width: 6px;
 }
 
 ::-webkit-scrollbar-track {
-  background: #1a1b26;
+  background: #060a06;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #414868;
-  border-radius: 4px;
+  background: #2e3e06;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #565f89;
+  background: #6a8a0a;
+}
+
+/* ─── Prose overrides for blog posts ─── */
+.prose {
+  color: #5a7a08;
+}
+
+.prose h1, .prose h2, .prose h3 {
+  color: #b8e010;
+  font-family: 'Press Start 2P', monospace;
+  text-shadow: 0 0 8px #9bbc0f;
+}
+
+.prose a {
+  color: #9bbc0f;
+  text-decoration: none;
+}
+
+.prose a:hover {
+  color: #b8e010;
+  text-shadow: 0 0 6px #9bbc0f;
+}
+
+.prose code {
+  color: #9bbc0f;
+  background: #0d140d;
+  border: 1px solid #1a2e1a;
+  padding: 0.15rem 0.4rem;
+  font-size: 0.85em;
+}
+
+.prose pre {
+  background: #0d140d;
+  border: 1px solid #1a2e1a;
+}
+
+.prose blockquote {
+  border-left-color: #6a8a0a;
+  color: #5a7a08;
+}
+
+.prose strong {
+  color: #9bbc0f;
+}
+
+/* ─── Legacy gameboy-lcd (keep for MiniGame) ─── */
+.gameboy-lcd {
+  background: linear-gradient(135deg, #9bbc0f 0%, #8bac0f 50%, #9bbc0f 100%);
+  filter: contrast(1.2) brightness(1.1);
 }
