@@ -22,7 +22,7 @@ The thing actually did it.
 
 I've been building [bigknoxy.github.io](https://bigknoxy.github.io) as a kind of personal laboratory. Not just a portfolio, but a place to experiment. The site runs Astro, Tailwind, a self-built ECS canvas game, Pagefind search — more moving parts than a portfolio strictly needs. That's intentional.
 
-I'd just finished a phosphor terminal redesign: the site now looks like a 1982 Game Boy display, green-on-black, CRT scanlines, the whole bit. I wanted to QA it. I wanted to know if it held up on mobile. I wanted the code reviewed. And honestly? I was curious what would happen if I just... let the agent run.
+I'd just finished a phosphor terminal redesign: the site now looks like a phosphor terminal from 1982 — green-on-black, CRT scanlines, the whole bit. I wanted to QA it. I wanted to know if it held up on mobile. I wanted the code reviewed. And honestly? I was curious what would happen if I just... let the agent run.
 
 So I did.
 
