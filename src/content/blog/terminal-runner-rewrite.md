@@ -38,7 +38,7 @@ It was not intentional.
 
 Fixing the broken bundle path meant making a choice: patch the build pipeline to correctly output the bundle, or go self-contained.
 
-Self-contained won. The reasoning was simple: a portfolio homepage game should not have an external dependency that can 404. Better to be 734 lines of inline script that always works than a clean architecture that breaks silently in production.
+Self-contained won. The reasoning was simple: a portfolio homepage game should not have an external dependency that can 404. Better to be 719 lines of inline script that always works than a clean architecture that breaks silently in production.
 
 So the game got rewritten as a self-contained `<script>` block inside `MiniGame.astro`. No external imports. No bundle. Just canvas, `requestAnimationFrame`, and the Web Audio API.
 
@@ -143,7 +143,7 @@ Sometimes the "simple" design fix is a load-bearing investigation.
 
 ## The Numbers
 
-- **Lines of inline game code**: 734
+- **Lines of inline game code**: 719
 - **External dependencies removed**: 1 (the bundle that was 404ing)
 - **Bugs shipped to production**: at minimum 5, discovered in one review
 - **Time the `[object Object]` bug had been live**: months, conservatively
