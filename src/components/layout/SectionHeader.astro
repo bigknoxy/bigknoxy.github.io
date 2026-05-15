@@ -15,7 +15,7 @@ const { label, linkHref, linkText, marginClass = 'mb-10' } = Astro.props;
   <span class="font-pixel text-[9px] text-phosphor-bright glow-text tracking-widest whitespace-nowrap">{label}</span>
   <div class="section-rule"></div>
   {linkHref && linkText && (
-    <a href={linkHref} class="text-phosphor-text text-[10px] tracking-widest hover:text-phosphor-bright transition-colors whitespace-nowrap">
+    <a href={linkHref} class="text-phosphor-text text-[10px] tracking-widest hover:text-phosphor-bright transition-colors whitespace-nowrap py-2 inline-block">
       {linkText}
     </a>
   )}

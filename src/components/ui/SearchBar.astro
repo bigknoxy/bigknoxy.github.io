@@ -6,14 +6,14 @@
   <label for="search-input" class="sr-only">Search posts</label>
   <input
     type="search"
-    placeholder="Search..."
-    class="w-full px-4 py-2 bg-tokyo-surface border border-tokyo-border rounded-lg text-tokyo-text placeholder-tokyo-muted focus:outline-none focus:border-tokyo-accent"
+    placeholder="search..."
+    class="w-full px-3 py-1.5 bg-phosphor-bg border border-phosphor-border text-phosphor-green placeholder-phosphor-text focus:outline-none focus:border-phosphor-green font-mono text-[11px] tracking-wider"
     id="search-input"
     aria-label="Search posts"
     autocomplete="off"
   />
 
-  <div id="search-results" class="absolute top-full mt-2 w-full bg-tokyo-surface border border-tokyo-border rounded-lg shadow-lg hidden" aria-live="polite">
+  <div id="search-results" class="absolute top-full mt-1 w-full bg-phosphor-surface border border-phosphor-border shadow-lg hidden z-50" aria-live="polite">
     <!-- Results populated by client script -->
   </div>
 </div>
@@ -46,7 +46,7 @@
   }
 
   function setSearchingState() {
-    resultsEl.innerHTML = '<div class="p-3 text-sm text-tokyo-muted">Searching...</div>';
+    resultsEl.innerHTML = '<div class="p-3 text-[10px] font-mono text-phosphor-text">searching...</div>';
     showContainer();
   }
 
@@ -108,8 +108,15 @@
 
       const a = document.createElement('a');
       a.href = r.url;
-      a.className = 'block p-3 focus:outline-none focus:bg-tokyo-accent/10';
-      a.innerHTML = `<div class="font-semibold text-tokyo-text">${escapeHtml(r.title)}</div><div class="text-sm text-tokyo-muted mt-1">${escapeHtml(r.excerpt || '')}</div>`;
+      a.className = 'block p-3 focus:outline-none hover:bg-phosphor-faint border-b border-phosphor-border';
+      const titleEl = document.createElement('div');
+      titleEl.className = 'font-mono text-[11px] text-phosphor-bright';
+      titleEl.textContent = r.title;
+      const excerptEl = document.createElement('div');
+      excerptEl.className = 'font-mono text-[10px] text-phosphor-text mt-1';
+      excerptEl.textContent = r.excerpt || '';
+      a.appendChild(titleEl);
+      a.appendChild(excerptEl);
       a.tabIndex = -1; // focusable programmatically
       a.dataset.index = String(i);
 

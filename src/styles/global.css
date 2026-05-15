@@ -231,6 +231,11 @@ body::after {
   text-shadow: 0 0 8px #9bbc0f;
 }
 
+.prose h1 {
+  font-size: clamp(14px, 4vw, 36px);
+  overflow-wrap: break-word;
+}
+
 .prose a {
   color: #9bbc0f;
   text-decoration: none;

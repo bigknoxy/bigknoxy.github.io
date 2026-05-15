@@ -13,13 +13,13 @@ const socialLinks = [
 ];
 
 const navLinkClass =
-  'nav-link text-phosphor-text text-[11px] tracking-widest hover:text-phosphor-bright transition-all hover:glow-text';
+  'nav-link text-phosphor-text text-[11px] tracking-widest hover:text-phosphor-bright transition-all hover:glow-text py-2 inline-block';
 const socialLinkClass =
-  'text-phosphor-text text-[10px] tracking-widest hover:text-phosphor-bright transition-colors';
+  'text-phosphor-text text-[10px] tracking-widest hover:text-phosphor-bright transition-colors py-2 px-1 inline-block';
 ---
 
 <header class="relative z-50 bg-phosphor-bg/98 border-b border-phosphor-border" style="backdrop-filter: blur(4px);">
-  <nav aria-label="Primary navigation" class="max-w-[1100px] mx-auto px-10 py-[18px] flex items-center justify-between">
+  <nav aria-label="Primary navigation" class="max-w-[1100px] mx-auto px-4 sm:px-6 md:px-10 py-[18px] flex items-center justify-between">
     <a href="/" class="font-pixel text-[13px] text-phosphor-bright glow-text tracking-wide" style="letter-spacing: 0.04em;">
       BIGKNOXY
     </a>
@@ -50,7 +50,7 @@ const socialLinkClass =
 
   <!-- Mobile nav strip -->
   <nav aria-label="Mobile navigation" class="md:hidden border-t border-phosphor-border">
-    <ul class="flex items-center justify-center gap-8 list-none px-10 py-3" role="list">
+    <ul class="flex items-center justify-center gap-6 list-none px-4 py-3" role="list">
       {navLinks.map((link) => (
         <li>
           <a href={link.href} class={navLinkClass}>{link.label}</a>
