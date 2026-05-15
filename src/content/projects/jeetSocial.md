@@ -2,7 +2,7 @@
 title: "JeetSocial"
 description: "A safe, anonymous social network dedicated to spreading kindness and positivity. Just 'yeet' some good vibes into the universe!"
 pubDate: 2026-01-15
-heroImage: "/assets/images/projects/jeetsocial/hero-new.svg"
+heroImage: "/assets/images/projects/jeetsocial/hero-new.png"
 tags:
   - "Bun"
   - "Hono"

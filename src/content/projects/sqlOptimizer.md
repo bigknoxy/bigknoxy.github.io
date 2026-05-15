@@ -2,7 +2,7 @@
 title: "SQL Optimizer Pro"
 description: "AI-powered SQL query optimization tool that transforms suboptimal queries into production-ready code using LLMs."
 pubDate: 2026-01-15
-heroImage: "/assets/images/projects/sqloptimizer/screenshot.svg"
+heroImage: "/assets/images/projects/sqloptimizer/screenshot.png"
 tags:
   - "SQL"
   - "AI"
