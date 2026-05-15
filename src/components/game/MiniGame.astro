@@ -6,7 +6,7 @@ import TerminalBar from '@/components/layout/TerminalBar.astro';
 
 <div id="mini-game-root" class="w-full max-w-3xl mx-auto">
   <div class="terminal-window glow-border">
-    <TerminalBar title="terminal-runner.exe" />
+    <TerminalBar title="TERMINAL-RUNNER.EXE" />
     <div class="relative">
       <canvas
         id="terminal-runner-canvas"
@@ -58,7 +58,8 @@ import TerminalBar from '@/components/layout/TerminalBar.astro';
 
   canvas.width  = W;
   canvas.height = H;
-  const ctx = canvas.getContext('2d')!;
+  const ctx = canvas.getContext('2d');
+  if (!ctx) return;
   ctx.imageSmoothingEnabled = false;
 
   // ─── Scrolling background text lines ──────────────────────────────────────
@@ -236,7 +237,7 @@ import TerminalBar from '@/components/layout/TerminalBar.astro';
 
   // ─── Collectibles ─────────────────────────────────────────────────────────
   interface Collectible {
-    x: number; y: number; collected: boolean;
+    x: number; y: number;
   }
   const collectibles: Collectible[] = [];
   let collectTimer = 0;
@@ -281,7 +282,7 @@ import TerminalBar from '@/components/layout/TerminalBar.astro';
   let state: GameState = 'idle';
   let gameSpeed = SPEED_START;
   let score = 0;
-  let highScore = 0;
+  let highScore = 0;       // live best — updated only on death
   let flashFrames = 0;
   let blinkTimer = 0;
   let blinkOn = true;
@@ -297,6 +298,9 @@ import TerminalBar from '@/components/layout/TerminalBar.astro';
     if (el) el.textContent = 'BEST: ' + String(highScore).padStart(4, '0');
   }
   updateHiScoreDisplay();
+
+  // saved high score shown in HUD during a live run (highScore only updates on death)
+  function displayBest() { return highScore; }
 
   // ─── Reset game ───────────────────────────────────────────────────────────
   function resetGame() {
@@ -337,13 +341,17 @@ import TerminalBar from '@/components/layout/TerminalBar.astro';
     else if (state === 'paused') state = 'running';
   }
 
-  window.addEventListener('keydown', (e: KeyboardEvent) => {
+  const onKeyDown = (e: KeyboardEvent) => {
     if (e.code === 'Space' || e.code === 'ArrowUp') {
-      e.preventDefault();
+      // Only block page scroll when canvas has focus or game is active
+      if (document.activeElement === canvas || state === 'running' || state === 'idle' || state === 'gameover') {
+        e.preventDefault();
+      }
       doJump();
     }
     if (e.key === 'p' || e.key === 'P') doPause();
-  });
+  };
+  window.addEventListener('keydown', onKeyDown);
 
   canvas.addEventListener('click', doJump);
   canvas.addEventListener('touchstart', (e: TouchEvent) => {
@@ -375,7 +383,7 @@ import TerminalBar from '@/components/layout/TerminalBar.astro';
     ctx.fillStyle = C.faint;
     ctx.shadowBlur = 0;
     for (const line of bgLines) {
-      ctx.fillText(line, line.x, line.y);
+      ctx.fillText(line.text, line.x, line.y);
     }
   }
 
@@ -410,7 +418,7 @@ import TerminalBar from '@/components/layout/TerminalBar.astro';
     ctx.shadowBlur = 0;
     ctx.fillStyle = C.dim;
     ctx.font = '8px "Press Start 2P", monospace';
-    ctx.fillText('BEST:' + String(highScore).padStart(4, '0'), W - 8, 30);
+    ctx.fillText('BEST:' + String(displayBest()).padStart(4, '0'), W - 8, 30);
     ctx.textAlign = 'left';
   }
 
@@ -531,6 +539,7 @@ import TerminalBar from '@/components/layout/TerminalBar.astro';
 
   // ─── Main game loop ───────────────────────────────────────────────────────
   let lastTime = 0;
+  let rafId = 0;
 
   function loop(now: number) {
     const dt = Math.min((now - lastTime) / (1000 / 60), 3); // cap at 3 frames
@@ -542,20 +551,20 @@ import TerminalBar from '@/components/layout/TerminalBar.astro';
 
     if (state === 'idle') {
       drawIdle();
-      requestAnimationFrame(loop);
+      rafId = requestAnimationFrame(loop);
       return;
     }
 
     if (state === 'paused') {
       // redraw last frame then overlay
       drawPausedFrame();
-      requestAnimationFrame(loop);
+      rafId = requestAnimationFrame(loop);
       return;
     }
 
     if (state === 'gameover') {
       drawGameOverFrame();
-      requestAnimationFrame(loop);
+      rafId = requestAnimationFrame(loop);
       return;
     }
 
@@ -606,7 +615,6 @@ import TerminalBar from '@/components/layout/TerminalBar.astro';
       collectibles.push({
         x: W + 4,
         y: GROUND_Y - 80 - Math.floor(Math.random() * 60),
-        collected: false,
       });
       collectCountdown = nextCollectInterval();
     }
@@ -650,21 +658,19 @@ import TerminalBar from '@/components/layout/TerminalBar.astro';
       }
     }
 
-    // collision: collectibles
-    for (const coin of collectibles) {
+    // collision: collectibles — splice immediately to avoid unbounded iteration
+    for (let i = collectibles.length - 1; i >= 0; i--) {
+      const coin = collectibles[i];
       if (coin.collected) continue;
       if (rectsOverlap(pb.x, pb.y, pb.w, pb.h, coin.x - 6, coin.y - 6, 12, 12)) {
-        coin.collected = true;
         score += 10;
         spawnParticles(coin.x, coin.y, 8, [C.bright, C.green, C.dim]);
+        collectibles.splice(i, 1);
       }
     }
 
-    // score
+    // score — highScore only written on death to keep BEST stable during a run
     score += dt;
-    if (score > highScore) {
-      highScore = Math.floor(score);
-    }
 
     // ── draw ─────────────────────────────────────────────────────────────────
     drawBackground();
@@ -681,7 +687,7 @@ import TerminalBar from '@/components/layout/TerminalBar.astro';
 
     // collectibles
     for (const coin of collectibles) {
-      if (!coin.collected) drawCollectible(coin.x, coin.y, 1);
+      drawCollectible(coin.x, coin.y, 1);
     }
 
     drawParticles();
@@ -695,7 +701,7 @@ import TerminalBar from '@/components/layout/TerminalBar.astro';
       flashFrames--;
     }
 
-    requestAnimationFrame(loop);
+    rafId = requestAnimationFrame(loop);
   }
 
   // paused/gameover need to re-render background + entities
@@ -707,7 +713,7 @@ import TerminalBar from '@/components/layout/TerminalBar.astro';
       else drawSpike(obs.x, obs.y, obs.w, obs.h);
     }
     for (const coin of collectibles) {
-      if (!coin.collected) drawCollectible(coin.x, coin.y, 1);
+      drawCollectible(coin.x, coin.y, 1);
     }
     drawPlayer(playerY < GROUND_Y);
     drawScore();
@@ -722,13 +728,19 @@ import TerminalBar from '@/components/layout/TerminalBar.astro';
       else drawSpike(obs.x, obs.y, obs.w, obs.h);
     }
     for (const coin of collectibles) {
-      if (!coin.collected) drawCollectible(coin.x, coin.y, 0.5);
+      drawCollectible(coin.x, coin.y, 0.5);
     }
     drawParticles();
     drawScore();
     drawGameOver();
   }
 
-  requestAnimationFrame(loop);
+  rafId = requestAnimationFrame(loop);
+
+  // Teardown: cancel loop + remove listener on Astro page transitions
+  document.addEventListener('astro:before-swap', () => {
+    cancelAnimationFrame(rafId);
+    window.removeEventListener('keydown', onKeyDown);
+  }, { once: true });
 })();
 </script>
