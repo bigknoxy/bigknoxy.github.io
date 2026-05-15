@@ -1,42 +1,44 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
+import SectionHeader from '../components/layout/SectionHeader.astro';
+import TerminalBar from '../components/layout/TerminalBar.astro';
+import Tag from '../components/ui/Tag.astro';
 import { getCollection } from 'astro:content';
+
+const SPECIAL_GAME_TITLES = new Set(['chicken-mob', 'chop-it-like-its-hawt', 'chopIt']);
 
 const games = await getCollection('projects', ({ data }) => {
   const tags = data.tags || [];
   const title = data.title || '';
-  return tags.includes('Game') ||
-         tags.includes('game') ||
-         title.toLowerCase().includes('game') ||
-         title === 'chicken-mob' ||
-         title === 'chop-it-like-its-hawt' ||
-         title === 'chopIt';
+  return (
+    tags.includes('Game') ||
+    tags.includes('game') ||
+    title.toLowerCase().includes('game') ||
+    SPECIAL_GAME_TITLES.has(title)
+  );
 });
 
 const sortedGames = games.sort((a, b) => {
-  if (a.data.featured && !b.data.featured) return -1;
-  if (!a.data.featured && b.data.featured) return 1;
+  if (a.data.featured !== b.data.featured) return a.data.featured ? -1 : 1;
   return new Date(b.data.pubDate).getTime() - new Date(a.data.pubDate).getTime();
 });
+
+function fileName(title: string): string {
+  return title.toUpperCase().replace(/\s+/g, '_');
+}
+
+function isGameTag(tag: string): boolean {
+  return tag !== 'Game' && tag !== 'game';
+}
 ---
 
 <BaseLayout title="Games | Joshua Knox">
   <main class="relative z-10 max-w-[1100px] mx-auto px-10 py-16">
 
-    <div class="flex items-center gap-5 mb-12">
-      <span class="font-pixel text-[9px] text-phosphor-bright glow-text tracking-widest whitespace-nowrap">ARCADE.EXE</span>
-      <div class="section-rule"></div>
-    </div>
+    <SectionHeader label="ARCADE.EXE" marginClass="mb-12" />
 
     <div class="terminal-window mb-10">
-      <div class="terminal-bar">
-        <div class="flex gap-[5px]">
-          <span class="terminal-dot"></span>
-          <span class="terminal-dot"></span>
-          <span class="terminal-dot"></span>
-        </div>
-        <span class="terminal-bar-title">ARCADE.SYS</span>
-      </div>
+      <TerminalBar title="ARCADE.SYS" />
       <div class="p-8 text-center">
         <h1 class="font-pixel text-phosphor-bright glow-text-bright mb-4 tracking-wider" style="font-size: clamp(18px, 4vw, 36px);">
           ARCADE
@@ -49,54 +51,41 @@ const sortedGames = games.sort((a, b) => {
     </div>
 
     <div class="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-      {sortedGames.map((game) => (
-        <a
-          href={game.data.demoUrl || game.data.repoUrl || `/projects/${game.slug}`}
-          target={game.data.demoUrl ? "_blank" : undefined}
-          rel={game.data.demoUrl ? "noopener noreferrer" : undefined}
-          class="terminal-window block no-underline transition-all duration-200 group hover:border-phosphor-green"
-          style="text-decoration: none;"
-        >
-          <div class="terminal-bar">
-            <div class="flex gap-[5px]">
-              <span class="terminal-dot"></span>
-              <span class="terminal-dot"></span>
-              <span class="terminal-dot"></span>
+      {sortedGames.map((game) => {
+        const href = game.data.demoUrl || game.data.repoUrl || `/projects/${game.slug}`;
+        const isExternal = Boolean(game.data.demoUrl);
+        const ctaLabel = game.data.demoUrl ? 'play --now →' : 'view --project →';
+        return (
+          <a
+            href={href}
+            target={isExternal ? '_blank' : undefined}
+            rel={isExternal ? 'noopener noreferrer' : undefined}
+            class="terminal-window block no-underline transition-all duration-200 group hover:border-phosphor-green"
+            style="text-decoration: none;"
+          >
+            <TerminalBar title={`${fileName(game.data.title)}.ROM`} />
+            <div class="p-7">
+              <h2 class="font-pixel text-[10px] text-phosphor-bright group-hover:glow-text mb-3 leading-[1.7] tracking-wide transition-all">
+                {game.data.title}
+              </h2>
+              <p class="text-[12px] text-phosphor-text leading-[1.9] mb-5 line-clamp-3">
+                {game.data.description}
+              </p>
+              <div class="flex flex-wrap gap-2 mb-5">
+                {game.data.tags.filter(isGameTag).map((tag: string) => <Tag label={tag} />)}
+              </div>
+              <div class="text-[10px] text-phosphor-dim group-hover:text-phosphor-green transition-colors tracking-wider">
+                <span class="text-phosphor-faint">$</span> {ctaLabel}
+              </div>
             </div>
-            <span class="terminal-bar-title">{game.data.title.toUpperCase().replace(/\s+/g, '_')}.ROM</span>
-          </div>
-          <div class="p-7">
-            <h2 class="font-pixel text-[10px] text-phosphor-bright group-hover:glow-text mb-3 leading-[1.7] tracking-wide transition-all">
-              {game.data.title}
-            </h2>
-            <p class="text-[12px] text-phosphor-text leading-[1.9] mb-5 line-clamp-3">
-              {game.data.description}
-            </p>
-            <div class="flex flex-wrap gap-2 mb-5">
-              {game.data.tags.filter((t: string) => t !== 'Game' && t !== 'game').map((tag: string) => (
-                <span class="text-[9px] px-[10px] py-[3px] border border-phosphor-faint text-phosphor-text tracking-wider">
-                  {tag}
-                </span>
-              ))}
-            </div>
-            <div class="text-[10px] text-phosphor-dim group-hover:text-phosphor-green transition-colors tracking-wider">
-              <span class="text-phosphor-faint">$</span> {game.data.demoUrl ? 'play --now →' : 'view --project →'}
-            </div>
-          </div>
-        </a>
-      ))}
+          </a>
+        );
+      })}
     </div>
 
     <!-- Code Runner teaser -->
     <div class="terminal-window mt-10">
-      <div class="terminal-bar">
-        <div class="flex gap-[5px]">
-          <span class="terminal-dot"></span>
-          <span class="terminal-dot"></span>
-          <span class="terminal-dot"></span>
-        </div>
-        <span class="terminal-bar-title">CODE_RUNNER.ROM</span>
-      </div>
+      <TerminalBar title="CODE_RUNNER.ROM" />
       <div class="p-8 text-center">
         <h3 class="font-pixel text-[12px] text-phosphor-bright glow-text mb-3">Code Runner</h3>
         <p class="text-[13px] text-phosphor-text leading-[1.9] mb-6">

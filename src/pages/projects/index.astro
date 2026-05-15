@@ -1,17 +1,21 @@
 ---
 import BaseLayout from '../../layouts/BaseLayout.astro';
+import SectionHeader from '../../components/layout/SectionHeader.astro';
+import TerminalBar from '../../components/layout/TerminalBar.astro';
+import Tag from '../../components/ui/Tag.astro';
 import { getCollection } from 'astro:content';
 
 const projects = await getCollection('projects');
+
+function fileName(title: string): string {
+  return title.toUpperCase().replace(/\s+/g, '_');
+}
 ---
 
 <BaseLayout title="Projects | Joshua Knox">
   <main class="relative z-10 max-w-[1100px] mx-auto px-10 py-16">
 
-    <div class="flex items-center gap-5 mb-12">
-      <span class="font-pixel text-[9px] text-phosphor-bright glow-text tracking-widest whitespace-nowrap">PROJECTS.LOG</span>
-      <div class="section-rule"></div>
-    </div>
+    <SectionHeader label="PROJECTS.LOG" marginClass="mb-12" />
 
     <div class="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
       {projects.map((project) => (
@@ -20,14 +24,7 @@ const projects = await getCollection('projects');
           class="terminal-window block no-underline transition-all duration-200 group hover:border-phosphor-green"
           style="text-decoration: none;"
         >
-          <div class="terminal-bar">
-            <div class="flex gap-[5px]">
-              <span class="terminal-dot"></span>
-              <span class="terminal-dot"></span>
-              <span class="terminal-dot"></span>
-            </div>
-            <span class="terminal-bar-title">{project.data.title.toUpperCase().replace(/\s+/g, '_')}.EXE</span>
-          </div>
+          <TerminalBar title={`${fileName(project.data.title)}.EXE`} />
           <div class="p-7">
             <h2 class="font-pixel text-[10px] text-phosphor-bright group-hover:glow-text mb-3 leading-[1.7] tracking-wide transition-all">
               {project.data.title}
@@ -36,11 +33,7 @@ const projects = await getCollection('projects');
               {project.data.description}
             </p>
             <div class="flex flex-wrap gap-2 mb-5">
-              {project.data.tags.map((tag) => (
-                <span class="text-[9px] px-[10px] py-[3px] border border-phosphor-faint text-phosphor-text tracking-wider">
-                  {tag}
-                </span>
-              ))}
+              {project.data.tags.map((tag) => <Tag label={tag} />)}
             </div>
             <div class="text-[10px] text-phosphor-dim group-hover:text-phosphor-green transition-colors">
               <span class="text-phosphor-faint">$</span> view --details →

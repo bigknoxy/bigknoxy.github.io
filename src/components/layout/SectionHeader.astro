@@ -1,0 +1,22 @@
+---
+// Phosphor section header: pixel-font label, fading rule, optional link.
+export interface Props {
+  label: string;
+  linkHref?: string;
+  linkText?: string;
+  /** Bottom margin utility (defaults to `mb-10`, matches the homepage hero rule). */
+  marginClass?: string;
+}
+
+const { label, linkHref, linkText, marginClass = 'mb-10' } = Astro.props;
+---
+
+<div class={`flex items-center gap-5 ${marginClass}`}>
+  <span class="font-pixel text-[9px] text-phosphor-bright glow-text tracking-widest whitespace-nowrap">{label}</span>
+  <div class="section-rule"></div>
+  {linkHref && linkText && (
+    <a href={linkHref} class="text-phosphor-text text-[10px] tracking-widest hover:text-phosphor-bright transition-colors whitespace-nowrap">
+      {linkText}
+    </a>
+  )}
+</div>

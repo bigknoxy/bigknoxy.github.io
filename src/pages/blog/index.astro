@@ -1,18 +1,21 @@
 ---
 import BaseLayout from '../../layouts/BaseLayout.astro';
+import SectionHeader from '../../components/layout/SectionHeader.astro';
+import TerminalBar from '../../components/layout/TerminalBar.astro';
 import { getCollection } from 'astro:content';
 
 const posts = await getCollection('blog');
 const sorted = posts.sort((a, b) => b.data.pubDate.getTime() - a.data.pubDate.getTime());
+
+function isoDate(d: Date): string {
+  return d.toISOString().split('T')[0];
+}
 ---
 
 <BaseLayout title="Blog | Joshua Knox">
   <main class="relative z-10 max-w-[1100px] mx-auto px-10 py-16">
 
-    <div class="flex items-center gap-5 mb-12">
-      <span class="font-pixel text-[9px] text-phosphor-bright glow-text tracking-widest whitespace-nowrap">BLOG.LOG</span>
-      <div class="section-rule"></div>
-    </div>
+    <SectionHeader label="BLOG.LOG" marginClass="mb-12" />
 
     <div class="flex flex-col gap-5">
       {sorted.map((post) => (
@@ -22,14 +25,7 @@ const sorted = posts.sort((a, b) => b.data.pubDate.getTime() - a.data.pubDate.ge
             class="terminal-window block no-underline transition-all duration-200 group hover:border-phosphor-green"
             style="text-decoration: none;"
           >
-            <div class="terminal-bar">
-              <div class="flex gap-[5px]">
-                <span class="terminal-dot"></span>
-                <span class="terminal-dot"></span>
-                <span class="terminal-dot"></span>
-              </div>
-              <span class="terminal-bar-title">{post.data.pubDate.toISOString().split('T')[0]}.md</span>
-            </div>
+            <TerminalBar title={`${isoDate(post.data.pubDate)}.md`} />
             <div class="p-7">
               <h2 class="font-pixel text-[10px] text-phosphor-bright group-hover:glow-text mb-3 leading-[1.7] tracking-wide transition-all">
                 {post.data.title}

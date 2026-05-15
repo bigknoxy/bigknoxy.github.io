@@ -51,23 +51,25 @@ body::after {
 }
 
 /* ─── Phosphor glow utilities ─── */
-.glow-text {
-  text-shadow:
-    0 0 8px #9bbc0f,
-    0 0 24px rgba(155, 188, 15, 0.35);
-}
+@layer utilities {
+  .glow-text {
+    text-shadow:
+      0 0 8px #9bbc0f,
+      0 0 24px rgba(155, 188, 15, 0.35);
+  }
 
-.glow-text-bright {
-  text-shadow:
-    0 0 12px #9bbc0f,
-    0 0 32px rgba(155, 188, 15, 0.35),
-    0 0 64px rgba(155, 188, 15, 0.12);
-}
+  .glow-text-bright {
+    text-shadow:
+      0 0 12px #b8e010,
+      0 0 40px rgba(184, 224, 16, 0.5),
+      0 0 80px rgba(184, 224, 16, 0.2);
+  }
 
-.glow-border {
-  box-shadow:
-    0 0 24px rgba(155, 188, 15, 0.25),
-    inset 0 0 40px rgba(155, 188, 15, 0.015);
+  .glow-border {
+    box-shadow:
+      0 0 24px rgba(155, 188, 15, 0.25),
+      inset 0 0 40px rgba(155, 188, 15, 0.015);
+  }
 }
 
 /* ─── Terminal window chrome ─── */

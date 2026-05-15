@@ -1,5 +1,21 @@
 ---
 import SearchBar from '../ui/SearchBar.astro';
+
+const navLinks = [
+  { href: '/projects', label: 'projects' },
+  { href: '/games', label: 'games' },
+  { href: '/blog', label: 'blog' },
+];
+
+const socialLinks = [
+  { href: 'https://github.com/bigknoxy', label: 'github', aria: 'GitHub Profile' },
+  { href: 'https://www.linkedin.com/in/joshua-knox-6651ba18/', label: 'linkedin', aria: 'LinkedIn Profile' },
+];
+
+const navLinkClass =
+  'nav-link text-phosphor-text text-[11px] tracking-widest hover:text-phosphor-bright transition-all hover:glow-text';
+const socialLinkClass =
+  'text-phosphor-text text-[10px] tracking-widest hover:text-phosphor-bright transition-colors';
 ---
 
 <header class="relative z-50 bg-phosphor-bg/98 border-b border-phosphor-border" style="backdrop-filter: blur(4px);">
@@ -9,31 +25,37 @@ import SearchBar from '../ui/SearchBar.astro';
     </a>
 
     <ul class="hidden md:flex items-center gap-8 list-none" role="list">
-      <li><a href="/projects" class="nav-link text-phosphor-text text-[11px] tracking-widest hover:text-phosphor-bright transition-all hover:glow-text" style="letter-spacing: 0.08em;">projects</a></li>
-      <li><a href="/games" class="nav-link text-phosphor-text text-[11px] tracking-widest hover:text-phosphor-bright transition-all hover:glow-text" style="letter-spacing: 0.08em;">games</a></li>
-      <li><a href="/blog" class="nav-link text-phosphor-text text-[11px] tracking-widest hover:text-phosphor-bright transition-all hover:glow-text" style="letter-spacing: 0.08em;">blog</a></li>
+      {navLinks.map((link) => (
+        <li>
+          <a href={link.href} class={navLinkClass} style="letter-spacing: 0.08em;">{link.label}</a>
+        </li>
+      ))}
     </ul>
 
     <div class="flex items-center gap-5">
       <SearchBar />
-      <a
-        href="https://github.com/bigknoxy"
-        target="_blank"
-        rel="noopener noreferrer"
-        class="text-phosphor-text text-[10px] tracking-widest hover:text-phosphor-bright transition-colors"
-        aria-label="GitHub Profile"
-      >
-        github
-      </a>
-      <a
-        href="https://www.linkedin.com/in/joshua-knox-6651ba18/"
-        target="_blank"
-        rel="noopener noreferrer"
-        class="text-phosphor-text text-[10px] tracking-widest hover:text-phosphor-bright transition-colors"
-        aria-label="LinkedIn Profile"
-      >
-        linkedin
-      </a>
+      {socialLinks.map((link) => (
+        <a
+          href={link.href}
+          target="_blank"
+          rel="noopener noreferrer"
+          class={socialLinkClass}
+          aria-label={link.aria}
+        >
+          {link.label}
+        </a>
+      ))}
     </div>
+  </nav>
+
+  <!-- Mobile nav strip -->
+  <nav aria-label="Mobile navigation" class="md:hidden border-t border-phosphor-border">
+    <ul class="flex items-center justify-center gap-8 list-none px-10 py-3" role="list">
+      {navLinks.map((link) => (
+        <li>
+          <a href={link.href} class={navLinkClass}>{link.label}</a>
+        </li>
+      ))}
+    </ul>
   </nav>
 </header>

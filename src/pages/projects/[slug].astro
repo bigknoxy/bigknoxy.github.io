@@ -1,5 +1,8 @@
 ---
 import BaseLayout from '../../layouts/BaseLayout.astro';
+import BackLink from '../../components/ui/BackLink.astro';
+import TerminalBar from '../../components/layout/TerminalBar.astro';
+import Tag from '../../components/ui/Tag.astro';
 import { getCollection } from 'astro:content';
 import type { CollectionEntry } from 'astro:content';
 
@@ -13,28 +16,17 @@ export async function getStaticPaths() {
 
 const { project }: { project: CollectionEntry<'projects'> } = Astro.props;
 const { Content } = await project.render();
+const fileName = project.data.title.toUpperCase().replace(/\s+/g, '_');
 ---
 
 <BaseLayout title={`${project.data.title} | Joshua Knox`}>
   <main class="relative z-10 max-w-[1100px] mx-auto px-10 py-16">
 
-    <!-- Back link -->
-    <div class="mb-8 text-[11px]">
-      <a href="/projects" class="text-phosphor-dim hover:text-phosphor-bright transition-colors tracking-wider">
-        <span class="text-phosphor-faint">←</span> cd /projects
-      </a>
-    </div>
+    <BackLink href="/projects" label="/projects" />
 
     <!-- Header terminal window -->
     <div class="terminal-window mb-8">
-      <div class="terminal-bar">
-        <div class="flex gap-[5px]">
-          <span class="terminal-dot"></span>
-          <span class="terminal-dot"></span>
-          <span class="terminal-dot"></span>
-        </div>
-        <span class="terminal-bar-title">{project.data.title.toUpperCase().replace(/\s+/g, '_')}.EXE</span>
-      </div>
+      <TerminalBar title={`${fileName}.EXE`} />
       <div class="p-8">
         <h1 class="font-pixel text-phosphor-bright glow-text mb-5 leading-[1.4]" style="font-size: clamp(14px, 2.5vw, 24px);">
           {project.data.title}
@@ -55,31 +47,17 @@ const { Content } = await project.render();
         )}
 
         <div class="flex flex-wrap gap-2 mb-8">
-          {project.data.tags.map((tag) => (
-            <span class="text-[9px] px-[10px] py-[3px] border border-phosphor-faint text-phosphor-text tracking-wider">
-              {tag}
-            </span>
-          ))}
+          {project.data.tags.map((tag) => <Tag label={tag} />)}
         </div>
 
         <div class="flex flex-wrap gap-4">
           {project.data.demoUrl && (
-            <a
-              href={project.data.demoUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              class="btn-phosphor"
-            >
+            <a href={project.data.demoUrl} target="_blank" rel="noopener noreferrer" class="btn-phosphor">
               LIVE DEMO
             </a>
           )}
           {project.data.repoUrl && (
-            <a
-              href={project.data.repoUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              class="btn-ghost-phosphor"
-            >
+            <a href={project.data.repoUrl} target="_blank" rel="noopener noreferrer" class="btn-ghost-phosphor">
               source code
             </a>
           )}
@@ -89,14 +67,7 @@ const { Content } = await project.render();
 
     <!-- Content terminal window -->
     <div class="terminal-window">
-      <div class="terminal-bar">
-        <div class="flex gap-[5px]">
-          <span class="terminal-dot"></span>
-          <span class="terminal-dot"></span>
-          <span class="terminal-dot"></span>
-        </div>
-        <span class="terminal-bar-title">README.md</span>
-      </div>
+      <TerminalBar title="README.md" />
       <div class="p-8">
         <article class="prose max-w-none">
           <Content />

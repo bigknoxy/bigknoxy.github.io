@@ -1,0 +1,24 @@
+---
+// Terminal window title bar: three dots + uppercase title.
+// Mirrors the markup that was duplicated across every page using the
+// `.terminal-window` chrome.
+export interface Props {
+  title: string;
+  /** When true, the bar's border-bottom dims on parent `.group:hover`. */
+  groupHover?: boolean;
+}
+
+const { title, groupHover = false } = Astro.props;
+const barClass = groupHover
+  ? 'terminal-bar group-hover:border-phosphor-faint transition-colors'
+  : 'terminal-bar';
+---
+
+<div class={barClass}>
+  <div class="flex gap-[5px]">
+    <span class="terminal-dot"></span>
+    <span class="terminal-dot"></span>
+    <span class="terminal-dot"></span>
+  </div>
+  <span class="terminal-bar-title">{title}</span>
+</div>

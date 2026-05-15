@@ -1,12 +1,13 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
 import Footer from '../components/layout/Footer.astro';
+import SectionHeader from '../components/layout/SectionHeader.astro';
+import TerminalBar from '../components/layout/TerminalBar.astro';
 import MiniGame from '../components/game/MiniGame.astro';
+import Tag from '../components/ui/Tag.astro';
 import { getCollection } from 'astro:content';
 
-const projects = await getCollection('projects', ({ data }) => {
-  return data.featured === true;
-});
+const projects = await getCollection('projects', ({ data }) => data.featured === true);
 
 const skills = [
   { name: 'C# / .NET', pct: '95%' },
@@ -16,13 +17,17 @@ const skills = [
   { name: 'Security & Privacy', pct: '82%' },
   { name: 'TypeScript', pct: '78%' },
 ];
+
+function fileName(title: string): string {
+  return title.toUpperCase().replace(/\s+/g, '_');
+}
 ---
 
 <BaseLayout title="Joshua Knox - Senior Software Engineer | Problem Solver">
   <main class="relative z-10 max-w-[1100px] mx-auto px-10">
 
     <!-- ── HERO ── -->
-    <section class="py-[88px] pb-[72px] border-b border-phosphor-border grid gap-16 items-center" style="grid-template-columns: 1fr 380px;">
+    <section class="py-[88px] pb-[72px] border-b border-phosphor-border grid grid-cols-1 md:grid-cols-[1fr_380px] gap-16 items-center">
       <!-- Left: identity -->
       <div>
         <div class="text-[11px] text-phosphor-text mb-7 tracking-wider">
@@ -51,14 +56,7 @@ const skills = [
 
       <!-- Right: STATS.SYS terminal panel -->
       <div class="terminal-window">
-        <div class="terminal-bar">
-          <div class="flex gap-[5px]">
-            <span class="terminal-dot"></span>
-            <span class="terminal-dot"></span>
-            <span class="terminal-dot"></span>
-          </div>
-          <span class="terminal-bar-title">STATS.SYS</span>
-        </div>
+        <TerminalBar title="STATS.SYS" />
         <div class="p-6">
           <div class="text-[11px] text-phosphor-text mb-4">
             <span class="text-phosphor-bright glow-text">$</span> josh --skills --verbose
@@ -85,13 +83,7 @@ const skills = [
 
     <!-- ── FEATURED WORK ── -->
     <section class="py-16 border-b border-phosphor-border">
-      <div class="flex items-center gap-5 mb-10">
-        <span class="font-pixel text-[9px] text-phosphor-bright glow-text tracking-widest whitespace-nowrap">FEATURED.LOG</span>
-        <div class="section-rule"></div>
-        <a href="/projects" class="text-phosphor-text text-[10px] tracking-widest hover:text-phosphor-bright transition-colors whitespace-nowrap">
-          all_projects →
-        </a>
-      </div>
+      <SectionHeader label="FEATURED.LOG" linkHref="/projects" linkText="all_projects →" />
 
       <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
         {projects.map((project) => (
@@ -100,14 +92,7 @@ const skills = [
             class="terminal-window block no-underline transition-all duration-200 group hover:border-phosphor-green"
             style="text-decoration: none;"
           >
-            <div class="terminal-bar group-hover:border-phosphor-faint transition-colors">
-              <div class="flex gap-[5px]">
-                <span class="terminal-dot"></span>
-                <span class="terminal-dot"></span>
-                <span class="terminal-dot"></span>
-              </div>
-              <span class="terminal-bar-title">{project.data.title.toUpperCase().replace(/\s+/g, '_')}.EXE</span>
-            </div>
+            <TerminalBar title={`${fileName(project.data.title)}.EXE`} groupHover />
             <div class="p-7 group-hover:glow-border transition-all">
               <h3 class="font-pixel text-[10px] text-phosphor-bright group-hover:glow-text mb-[14px] leading-[1.7] tracking-wide transition-all">
                 {project.data.title}
@@ -116,11 +101,7 @@ const skills = [
                 {project.data.description}
               </p>
               <div class="flex flex-wrap gap-2">
-                {project.data.tags.slice(0, 4).map((tag) => (
-                  <span class="text-[9px] px-[10px] py-[3px] border border-phosphor-faint text-phosphor-text tracking-wider">
-                    {tag}
-                  </span>
-                ))}
+                {project.data.tags.slice(0, 4).map((tag) => <Tag label={tag} />)}
               </div>
             </div>
           </a>
@@ -130,19 +111,9 @@ const skills = [
 
     <!-- ── MINI GAME ── -->
     <section class="py-16 border-b border-phosphor-border">
-      <div class="flex items-center gap-5 mb-10">
-        <span class="font-pixel text-[9px] text-phosphor-bright glow-text tracking-widest whitespace-nowrap">TAKE_A_BREAK.EXE</span>
-        <div class="section-rule"></div>
-      </div>
+      <SectionHeader label="TAKE_A_BREAK.EXE" />
       <div class="terminal-window inline-block overflow-hidden">
-        <div class="terminal-bar">
-          <div class="flex gap-[5px]">
-            <span class="terminal-dot"></span>
-            <span class="terminal-dot"></span>
-            <span class="terminal-dot"></span>
-          </div>
-          <span class="terminal-bar-title">MINIGAME.SYS</span>
-        </div>
+        <TerminalBar title="MINIGAME.SYS" />
         <MiniGame />
       </div>
     </section>

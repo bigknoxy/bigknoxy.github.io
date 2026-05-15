@@ -1,6 +1,8 @@
 ---
 import { type CollectionEntry, getCollection } from 'astro:content';
 import BaseLayout from '../../layouts/BaseLayout.astro';
+import BackLink from '../../components/ui/BackLink.astro';
+import TerminalBar from '../../components/layout/TerminalBar.astro';
 
 export async function getStaticPaths() {
   const posts = await getCollection('blog');
@@ -14,26 +16,21 @@ type Props = CollectionEntry<'blog'>;
 
 const post = Astro.props;
 const { Content } = await post.render();
+const isoDate = post.data.pubDate.toISOString().split('T')[0];
+const longDate = post.data.pubDate.toLocaleDateString('en-US', {
+  year: 'numeric',
+  month: 'long',
+  day: 'numeric',
+});
 ---
 
 <BaseLayout title={`${post.data.title} | Joshua Knox`}>
   <main class="relative z-10 max-w-[1100px] mx-auto px-10 py-16">
 
-    <div class="mb-8 text-[11px]">
-      <a href="/blog" class="text-phosphor-dim hover:text-phosphor-bright transition-colors tracking-wider">
-        <span class="text-phosphor-faint">←</span> cd /blog
-      </a>
-    </div>
+    <BackLink href="/blog" label="/blog" />
 
     <div class="terminal-window mb-6">
-      <div class="terminal-bar">
-        <div class="flex gap-[5px]">
-          <span class="terminal-dot"></span>
-          <span class="terminal-dot"></span>
-          <span class="terminal-dot"></span>
-        </div>
-        <span class="terminal-bar-title">{post.data.pubDate.toISOString().split('T')[0]}.md</span>
-      </div>
+      <TerminalBar title={`${isoDate}.md`} />
       <div class="p-8">
         <h1 class="font-pixel text-phosphor-bright glow-text mb-4 leading-[1.5]" style="font-size: clamp(12px, 2vw, 20px);">
           {post.data.title}
@@ -41,21 +38,14 @@ const { Content } = await post.render();
         {post.data.description && (
           <p class="text-[13px] text-phosphor-text leading-[1.9] mb-4">{post.data.description}</p>
         )}
-        <time class="text-[10px] text-phosphor-dim tracking-widest">
-          {post.data.pubDate.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}
+        <time datetime={isoDate} class="text-[10px] text-phosphor-dim tracking-widest">
+          {longDate}
         </time>
       </div>
     </div>
 
     <div class="terminal-window">
-      <div class="terminal-bar">
-        <div class="flex gap-[5px]">
-          <span class="terminal-dot"></span>
-          <span class="terminal-dot"></span>
-          <span class="terminal-dot"></span>
-        </div>
-        <span class="terminal-bar-title">CONTENT.md</span>
-      </div>
+      <TerminalBar title="CONTENT.md" />
       <div class="p-8">
         <article class="prose max-w-none">
           <Content />

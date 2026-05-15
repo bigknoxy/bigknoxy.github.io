@@ -1,0 +1,12 @@
+---
+// Single tag chip with the standard phosphor-faint bordered style.
+export interface Props {
+  label: string;
+}
+
+const { label } = Astro.props;
+---
+
+<span class="text-[9px] px-[10px] py-[3px] border border-phosphor-faint text-phosphor-text tracking-wider">
+  {label}
+</span>
