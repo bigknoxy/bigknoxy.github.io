@@ -4,6 +4,16 @@ export default {
   theme: {
     extend: {
       colors: {
+        'phosphor': {
+          'bg': '#060a06',
+          'surface': '#0d140d',
+          'border': '#1a2e1a',
+          'green': '#9bbc0f',
+          'bright': '#b8e010',
+          'dim': '#6a8a0a',
+          'faint': '#2e3e06',
+          'text': '#5a7a08',
+        },
         'gameboy': {
           'darkest': '#0f380f',
           'dark': '#306230',
