@@ -2,7 +2,7 @@
 title: "frame-kit"
 description: "Shell-based agentic FRAME loop implementation. Run the Focus-Requirements-Automate-Measure-Evaluate cycle directly from your terminal."
 pubDate: 2026-04-01
-heroImage: "/assets/images/projects/frame-kit-hero.png"
+heroImage: "/assets/images/projects/frame-kit-hero.svg"
 tags:
   - "Shell"
   - "Bash"

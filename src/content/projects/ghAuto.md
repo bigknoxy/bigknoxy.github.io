@@ -4,7 +4,7 @@ description: "GitHub repository management and analysis tool. Automate repo main
 pubDate: 2026-04-01
 tags: ["Python", "GitHub API", "Automation"]
 repoUrl: "https://github.com/bigknoxy/ghAuto"
-heroImage: "/assets/images/projects/ghauto-hero.png"
+heroImage: "/assets/images/projects/ghauto-hero.svg"
 featured: false
 ---
 

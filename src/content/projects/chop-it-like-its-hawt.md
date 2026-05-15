@@ -4,7 +4,7 @@ description: "An incremental clicker game about chopping vegetables. Absurd, sat
 pubDate: 2026-05-01
 tags: ["TypeScript", "Vite", "Incremental Game", "Game"]
 repoUrl: "https://github.com/bigknoxy/chop-it-like-its-hawt"
-heroImage: "/assets/images/projects/chop-hawt-hero.png"
+heroImage: "/assets/images/projects/chop-hawt-hero.svg"
 featured: true
 ---
 

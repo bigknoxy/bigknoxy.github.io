@@ -4,7 +4,7 @@ description: "CLI wrapper for Exa MCP tools. Search, crawl, and research the web
 pubDate: 2026-04-01
 tags: ["TypeScript", "Exa API", "MCP"]
 repoUrl: "https://github.com/bigknoxy/exa-cli"
-heroImage: "/assets/images/projects/exa-cli-hero.png"
+heroImage: "/assets/images/projects/exa-cli-hero.svg"
 featured: false
 ---
 

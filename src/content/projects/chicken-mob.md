@@ -4,7 +4,7 @@ description: "A fast-paced, lane-based crowd game with chickens. Because why not
 pubDate: 2026-04-01
 tags: ["TypeScript", "Canvas", "Web Audio", "Game"]
 repoUrl: "https://github.com/bigknoxy/chicken-mob"
-heroImage: "/assets/images/projects/chicken-mob-hero.png"
+heroImage: "/assets/images/projects/chicken-mob-hero.svg"
 featured: true
 ---
 

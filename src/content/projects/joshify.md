@@ -4,7 +4,7 @@ description: "A beautiful terminal Spotify client built with Rust. Features albu
 pubDate: 2026-04-01
 tags: ["Rust", "TUI", "Spotify API"]
 repoUrl: "https://github.com/bigknoxy/joshify"
-heroImage: "/assets/images/projects/joshify-hero.png"
+heroImage: "/assets/images/projects/joshify-hero.svg"
 featured: false
 ---
 
