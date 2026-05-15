@@ -1,447 +1,734 @@
 ---
-// MiniGame.astro
-// SSR-safe Astro component that lazy-loads the GameEngine on visibility or user gesture
+// MiniGame.astro — self-contained Terminal Runner game
+// No external bundle dependency. All game logic lives in <script>.
 import TerminalBar from '@/components/layout/TerminalBar.astro';
 ---
 
-<div id="mini-game-root" class="game-container w-full max-w-2xl mx-auto" role="region" aria-label="Code Runner mini game">
-  <!-- Terminal window chrome -->
+<div id="mini-game-root" class="w-full max-w-2xl mx-auto">
   <div class="terminal-window glow-border">
-    <TerminalBar title="code-runner.exe" />
-
-    <div class="p-4">
-      <div class="mx-auto w-full" style="max-width: min(320px, 100%)">
-        <div id="game-screen" class="game-screen bg-gameboy-darkest relative mx-auto border border-phosphor-border" style="width:100%;">
-          <canvas id="mini-game-canvas" width="240" height="216" aria-hidden="true" class="pixel-perfect w-full h-auto mx-auto block" style="aspect-ratio: 240 / 216;"></canvas>
-
-          <div id="mini-game-overlay" class="absolute inset-0 flex flex-col items-center justify-center gap-3 pointer-events-none">
-            <div id="mini-game-message" class="bg-phosphor-bg/80 text-phosphor-bright glow-text font-pixel text-xs p-3 pointer-events-auto border border-phosphor-faint">
-              LOADING
-            </div>
-            <button id="mini-game-cta" class="btn-phosphor pointer-events-auto text-xs focus:outline-none" aria-label="Load and start game">Start Game</button>
-          </div>
-
-          <!-- GAME OVER overlay contained within game-screen -->
-          <div id="game-over-overlay" class="absolute inset-0 bg-phosphor-bg/85 flex items-center justify-center hidden pointer-events-none" role="dialog" aria-modal="true" aria-labelledby="gameover-title" aria-hidden="true">
-            <div class="pointer-events-auto text-center bg-phosphor-surface border border-phosphor-border p-4 min-w-[160px] max-w-[90%] shadow-lg">
-              <h2 id="gameover-title" class="text-phosphor-bright glow-text-bright font-pixel text-xs mb-2">GAME OVER</h2>
-              <p id="gameover-score" class="text-phosphor-green font-pixel text-xs mb-3" aria-live="assertive">FINAL: 0000</p>
-              <button id="gameover-restart" class="btn-phosphor text-xs focus:outline-none" aria-label="Restart game">Restart</button>
-            </div>
-          </div>
-        </div>
-
-        <div class="mt-3 flex items-center justify-between">
-          <div class="text-phosphor-bright glow-text font-pixel text-xs" aria-live="polite">
-            <span id="mini-game-score">SCORE: 0000</span>
-          </div>
-
-          <div class="flex items-center gap-2">
-            <button id="mini-game-start" class="px-3 py-1 bg-phosphor-green text-phosphor-bg font-pixel text-xs hover:bg-phosphor-bright focus:outline-none transition-colors" aria-pressed="false">Start</button>
-            <button id="mini-game-pause" class="px-3 py-1 bg-phosphor-green text-phosphor-bg font-pixel text-xs hover:bg-phosphor-bright focus:outline-none transition-colors" aria-pressed="false">Pause</button>
-            <button id="mini-game-mute" class="px-2 py-1 bg-phosphor-faint text-phosphor-green font-pixel text-xs hover:bg-phosphor-dim hover:text-phosphor-bg focus:outline-none transition-colors border border-phosphor-border" aria-pressed="false">Mute</button>
-            <label for="mini-game-volume" class="sr-only">Volume</label>
-            <input id="mini-game-volume" type="range" min="0" max="1" step="0.01" value="0.3" class="w-20 accent-phosphor-green" style="filter: hue-rotate(0deg);" aria-label="Game volume">
-          </div>
-        </div>
-
-        <div class="mt-2 text-phosphor-text text-xs font-mono">Keyboard: Space to jump &bull; P to pause &bull; Touch: tap to jump</div>
-      </div>
+    <TerminalBar title="terminal-runner.exe" />
+    <div class="relative">
+      <canvas
+        id="terminal-runner-canvas"
+        class="w-full block"
+        style="aspect-ratio: 480/270; background: #060a06; image-rendering: pixelated; image-rendering: crisp-edges;"
+        aria-label="Terminal Runner endless runner game"
+        tabindex="0"
+      ></canvas>
+    </div>
+    <div class="px-4 py-2 border-t border-phosphor-border flex justify-between items-center">
+      <span class="text-phosphor-text text-[10px] font-mono tracking-wider">
+        SPACE / TAP &rarr; jump &bull; double-jump allowed &bull; P &rarr; pause
+      </span>
+      <span id="tr-hiscore-display" class="text-phosphor-dim text-[9px] font-pixel">BEST: 0000</span>
     </div>
   </div>
 </div>
 
-<script type="module">
-  // Client-only logic: lazy-load GameEngine on visibility or user gesture
-  (function () {
-    if (typeof window === 'undefined') return;
+<script>
+(function () {
+  if (typeof window === 'undefined') return;
 
-    var ROOT_ID = 'mini-game-root';
-    var CANVAS_ID = 'mini-game-canvas';
-    var CTA_ID = 'mini-game-cta';
-    var START_ID = 'mini-game-start';
-    var PAUSE_ID = 'mini-game-pause';
-    var MUTE_ID = 'mini-game-mute';
-    var VOLUME_ID = 'mini-game-volume';
-    var SCORE_ID = 'mini-game-score';
+  // ─── Constants ────────────────────────────────────────────────────────────
+  const W = 480;
+  const H = 270;
+  const GROUND_Y = 248;          // y where feet touch
+  const GRAVITY   = 0.55;
+  const JUMP_VEL  = -11;
+  const MAX_JUMPS = 2;
+  const SPEED_START = 3.5;
+  const SPEED_MAX   = 10;
+  const SPEED_INC   = 0.0008;
 
-    var root = document.getElementById(ROOT_ID);
-    var canvas = document.getElementById(CANVAS_ID);
-    var cta = document.getElementById(CTA_ID);
-    var startBtn = document.getElementById(START_ID);
-    var pauseBtn = document.getElementById(PAUSE_ID);
-    var muteBtn = document.getElementById(MUTE_ID);
-    var volumeEl = document.getElementById(VOLUME_ID);
-    var scoreEl = document.getElementById(SCORE_ID);
+  // phosphor palette
+  const C = {
+    bg:      '#060a06',
+    surface: '#0d140d',
+    border:  '#1a2e1a',
+    green:   '#9bbc0f',
+    bright:  '#b8e010',
+    dim:     '#6a8a0a',
+    faint:   '#2e3e06',
+    text:    '#5a7a08',
+  };
 
-    if (!root || !canvas) return;
+  // ─── Canvas setup ─────────────────────────────────────────────────────────
+  const canvas = document.getElementById('terminal-runner-canvas') as HTMLCanvasElement;
+  if (!canvas) return;
 
-    // State
-    var engine = null;
-    var engineReady = false;
-    var loading = false;
+  canvas.width  = W;
+  canvas.height = H;
+  const ctx = canvas.getContext('2d')!;
+  ctx.imageSmoothingEnabled = false;
 
-    // Test backward compatibility: set initial ready state
-    try { 
-      window.__miniGameReady = false;
-      window.__miniGameReadyPromise = null;
-    } catch (e) {}
+  // ─── Scrolling background text lines ──────────────────────────────────────
+  const BG_LINES = [
+    '> scanning...',
+    '$ npm run build',
+    'Error: 404',
+    'const x = () =>',
+    'import { Game }',
+    'while(alive) {',
+    'git push origin',
+    '[████░░░░] 52%',
+    '> boot sequence',
+    '$ ./run.sh',
+    'WARN: undefined',
+    'export default fn',
+  ];
 
-    // Helper to dispatch custom events from root
-    function dispatchGameEvent(name, detail) {
-      if (detail === void 0) { detail = {}; }
-      var ev = new CustomEvent(name, { detail: detail });
-      root.dispatchEvent(ev);
-      // also store last event for tests
-      try { window.__lastMiniGameEvent = { name: name, detail: detail, time: Date.now() }; } catch (e) {}
+  interface BgLine {
+    text: string;
+    x: number;
+    y: number;
+    speed: number;
+  }
+
+  const bgLines: BgLine[] = Array.from({ length: 8 }, (_, i) => ({
+    text:  BG_LINES[i % BG_LINES.length],
+    x:     Math.random() * W,
+    y:     20 + Math.floor(Math.random() * (GROUND_Y - 60)),
+    speed: 0.3 + Math.random() * 0.5,
+  }));
+
+  // ─── Particle system ──────────────────────────────────────────────────────
+  interface Particle {
+    x: number; y: number;
+    vx: number; vy: number;
+    life: number; maxLife: number;
+    color: string; size: number;
+  }
+  const particles: Particle[] = [];
+
+  function spawnParticles(x: number, y: number, count: number, colors: string[]) {
+    for (let i = 0; i < count; i++) {
+      const angle = (Math.PI * 2 * i) / count + Math.random() * 0.5;
+      const speed = 1.5 + Math.random() * 2.5;
+      particles.push({
+        x, y,
+        vx: Math.cos(angle) * speed,
+        vy: Math.sin(angle) * speed - 1,
+        life: 30 + Math.random() * 20,
+        maxLife: 50,
+        color: colors[Math.floor(Math.random() * colors.length)],
+        size: 2 + Math.random() * 2,
+      });
+    }
+  }
+
+  // ─── Player ───────────────────────────────────────────────────────────────
+  let playerX  = 72;
+  let playerY  = GROUND_Y;  // feet y
+  let playerVY = 0;
+  let jumpsLeft = MAX_JUMPS;
+  let animFrame = 0;
+  let animTimer = 0;
+
+  function playerBox() {
+    return { x: playerX - 5, y: playerY - 22, w: 10, h: 22 };
+  }
+
+  function drawPlayer(isJumping: boolean) {
+    const x = Math.round(playerX - 7);
+    const y = Math.round(playerY - 22);
+
+    ctx.shadowBlur = 8;
+    ctx.shadowColor = C.green;
+
+    // Head
+    ctx.fillStyle = C.bright;
+    ctx.fillRect(x + 2, y,     10, 8);
+
+    // Eyes
+    ctx.shadowBlur = 0;
+    ctx.fillStyle = C.bg;
+    ctx.fillRect(x + 3, y + 2, 2, 2);
+    ctx.fillRect(x + 9, y + 2, 2, 2);
+
+    // Body
+    ctx.shadowBlur = 6;
+    ctx.shadowColor = C.green;
+    ctx.fillStyle = C.green;
+    ctx.fillRect(x + 2, y + 8,  10, 10);
+
+    // Arms
+    ctx.fillRect(x,      y + 9, 2, 6);
+    ctx.fillRect(x + 12, y + 9, 2, 6);
+
+    // Legs
+    ctx.fillStyle = C.dim;
+    ctx.shadowBlur = 0;
+    if (isJumping) {
+      ctx.fillRect(x + 2, y + 18, 4, 3);
+      ctx.fillRect(x + 8, y + 18, 4, 3);
+    } else if (animFrame === 0) {
+      ctx.fillRect(x + 2, y + 18, 4, 4);
+      ctx.fillRect(x + 8, y + 18, 4, 2);
+    } else {
+      ctx.fillRect(x + 2, y + 18, 4, 2);
+      ctx.fillRect(x + 8, y + 18, 4, 4);
+    }
+    ctx.shadowBlur = 0;
+  }
+
+  // ─── Obstacles ────────────────────────────────────────────────────────────
+  interface Obstacle {
+    x: number; y: number; w: number; h: number; type: 'error' | 'spike';
+  }
+  const obstacles: Obstacle[] = [];
+
+  function drawErrorBlock(x: number, y: number, w: number, h: number) {
+    ctx.shadowBlur = 0;
+    ctx.fillStyle = C.surface;
+    ctx.fillRect(x, y, w, h);
+    ctx.strokeStyle = C.dim;
+    ctx.lineWidth = 1;
+    ctx.strokeRect(x + 0.5, y + 0.5, w - 1, h - 1);
+
+    // inner detail lines
+    ctx.strokeStyle = C.faint;
+    ctx.strokeRect(x + 2.5, y + 2.5, w - 5, h - 5);
+
+    ctx.shadowBlur = 4;
+    ctx.shadowColor = C.green;
+    ctx.fillStyle = C.green;
+    ctx.font = '6px "Press Start 2P", monospace';
+    ctx.textAlign = 'center';
+    ctx.fillText('ERR', x + w / 2, y + h / 2 + 2);
+    ctx.textAlign = 'left';
+    ctx.shadowBlur = 0;
+  }
+
+  function drawSpike(x: number, y: number, w: number, h: number) {
+    // flat body
+    ctx.fillStyle = C.surface;
+    ctx.fillRect(x, y + h - 8, w, 8);
+    ctx.strokeStyle = C.dim;
+    ctx.lineWidth = 1;
+    ctx.strokeRect(x + 0.5, y + h - 7.5, w - 1, 6);
+
+    // spikes (5 triangles via fillRect approximation)
+    ctx.fillStyle = C.dim;
+    ctx.shadowBlur = 3;
+    ctx.shadowColor = C.green;
+    const spikeCount = 4;
+    const spikeW = Math.floor(w / spikeCount);
+    for (let i = 0; i < spikeCount; i++) {
+      const sx = x + i * spikeW;
+      // draw as stacked narrowing rects
+      ctx.fillRect(sx + spikeW / 2 - 1, y,          2, h - 8);
+      ctx.fillRect(sx + spikeW / 2 - 2, y + 3,      4, h - 11);
+      ctx.fillRect(sx + spikeW / 2 - 3, y + 5,      6, h - 13);
+    }
+    ctx.shadowBlur = 0;
+  }
+
+  function spawnObstacle() {
+    const type = Math.random() < 0.6 ? 'error' : 'spike';
+    if (type === 'error') {
+      const h = 28 + Math.floor(Math.random() * 18);
+      obstacles.push({ x: W + 4, y: GROUND_Y - h, w: 16, h, type });
+    } else {
+      const h = 18;
+      obstacles.push({ x: W + 4, y: GROUND_Y - h, w: 28, h, type });
+    }
+  }
+
+  // ─── Collectibles ─────────────────────────────────────────────────────────
+  interface Collectible {
+    x: number; y: number; collected: boolean;
+  }
+  const collectibles: Collectible[] = [];
+  let collectTimer = 0;
+  const COLLECT_INTERVAL_MIN = 180;
+  const COLLECT_INTERVAL_RANGE = 120;
+
+  function nextCollectInterval() {
+    return COLLECT_INTERVAL_MIN + Math.floor(Math.random() * COLLECT_INTERVAL_RANGE);
+  }
+
+  let collectCountdown = nextCollectInterval();
+
+  function drawCollectible(x: number, y: number, alpha: number) {
+    ctx.globalAlpha = alpha;
+    ctx.shadowBlur = 8;
+    ctx.shadowColor = C.bright;
+    ctx.fillStyle = C.bright;
+    ctx.font = '10px "Press Start 2P", monospace';
+    ctx.textAlign = 'center';
+    ctx.fillText('$', Math.round(x), Math.round(y + 4));
+    ctx.textAlign = 'left';
+    ctx.shadowBlur = 0;
+    ctx.globalAlpha = 1;
+  }
+
+  // ─── Ground tick marks ────────────────────────────────────────────────────
+  let groundOffset = 0;
+
+  // ─── Obstacle spawning ────────────────────────────────────────────────────
+  let obsCountdown = 80;
+  const OBS_MIN = 55;
+  const OBS_MAX = 110;
+
+  function nextObsInterval(speed: number) {
+    const t = (speed - SPEED_START) / (SPEED_MAX - SPEED_START);
+    const max = OBS_MAX - t * (OBS_MAX - OBS_MIN);
+    return Math.floor(OBS_MIN + Math.random() * (max - OBS_MIN));
+  }
+
+  // ─── Game state ───────────────────────────────────────────────────────────
+  type GameState = 'idle' | 'running' | 'paused' | 'gameover';
+  let state: GameState = 'idle';
+  let gameSpeed = SPEED_START;
+  let score = 0;
+  let highScore = 0;
+  let flashFrames = 0;
+  let blinkTimer = 0;
+  let blinkOn = true;
+
+  try {
+    const stored = localStorage.getItem('termRunHS');
+    if (stored) highScore = parseInt(stored, 10) || 0;
+  } catch (_) {}
+
+  // update hi-score display in footer
+  function updateHiScoreDisplay() {
+    const el = document.getElementById('tr-hiscore-display');
+    if (el) el.textContent = 'BEST: ' + String(highScore).padStart(4, '0');
+  }
+  updateHiScoreDisplay();
+
+  // ─── Reset game ───────────────────────────────────────────────────────────
+  function resetGame() {
+    playerY  = GROUND_Y;
+    playerVY = 0;
+    jumpsLeft = MAX_JUMPS;
+    animFrame = 0;
+    animTimer = 0;
+    obstacles.length = 0;
+    collectibles.length = 0;
+    particles.length = 0;
+    gameSpeed = SPEED_START;
+    score = 0;
+    flashFrames = 0;
+    obsCountdown = 80;
+    collectCountdown = nextCollectInterval();
+    groundOffset = 0;
+    blinkTimer = 0;
+    blinkOn = true;
+    collectTimer = 0;
+  }
+
+  // ─── Input ────────────────────────────────────────────────────────────────
+  function doJump() {
+    if (state === 'idle' || state === 'gameover') {
+      resetGame();
+      state = 'running';
+      return;
+    }
+    if (state === 'running' && jumpsLeft > 0) {
+      playerVY = JUMP_VEL;
+      jumpsLeft--;
+    }
+  }
+
+  function doPause() {
+    if (state === 'running') state = 'paused';
+    else if (state === 'paused') state = 'running';
+  }
+
+  window.addEventListener('keydown', (e: KeyboardEvent) => {
+    if (e.code === 'Space' || e.code === 'ArrowUp') {
+      e.preventDefault();
+      doJump();
+    }
+    if (e.key === 'p' || e.key === 'P') doPause();
+  });
+
+  canvas.addEventListener('click', doJump);
+  canvas.addEventListener('touchstart', (e: TouchEvent) => {
+    e.preventDefault();
+    doJump();
+  }, { passive: false });
+
+  // ─── Drawing helpers ──────────────────────────────────────────────────────
+  function drawBackground() {
+    // solid bg
+    ctx.fillStyle = C.bg;
+    ctx.fillRect(0, 0, W, H);
+
+    // horizontal grid lines
+    ctx.fillStyle = C.surface;
+    for (let gy = 0; gy < GROUND_Y; gy += 40) {
+      ctx.fillRect(0, gy, W, 1);
     }
 
-    // Update score UI helper
-    function updateScoreUI(score) {
-      if (scoreEl) {
-        scoreEl.textContent = 'SCORE: ' + String(score || 0).padStart(4, '0');
-      }
+    // vertical grid lines (scrolling)
+    const vOffset = groundOffset % 48;
+    ctx.fillStyle = C.surface;
+    for (let gx = -vOffset; gx < W; gx += 48) {
+      ctx.fillRect(gx, 0, 1, GROUND_Y);
     }
 
-    // Setup a small API surface on window for programmatic control
-    function exposeAPI(engineInstance) {
-      var api = {
-        start: function () { return engineInstance && typeof engineInstance.start === 'function' && engineInstance.start(); },
-        pause: function () { return engineInstance && typeof engineInstance.pause === 'function' && engineInstance.pause(); },
-        reset: function () { return engineInstance && typeof engineInstance.reset === 'function' && engineInstance.reset(); },
-        restart: function () { return engineInstance && typeof engineInstance.restart === 'function' && engineInstance.restart(); },
-        getScore: function () { return engineInstance && typeof engineInstance.getScore === 'function' ? engineInstance.getScore() : 0; },
-        setScore: function (s) { return engineInstance && typeof engineInstance.setScore === 'function' && engineInstance.setScore(s); },
-        addScore: function (points) { return engineInstance && typeof engineInstance.addScore === 'function' && engineInstance.addScore(points); },
-        setSoundEnabled: function (enabled) {
-          var audio = engineInstance && typeof engineInstance.getAudioSystem === 'function' && engineInstance.getAudioSystem();
-          if (audio) {
-            if (enabled && typeof audio.unmute === 'function') audio.unmute();
-            if (!enabled && typeof audio.mute === 'function') audio.mute();
-          }
-        },
-        getHighScore: function () { return engineInstance && typeof engineInstance.getHighScore === 'function' ? engineInstance.getHighScore() : 0; },
-        resetHighScore: function () { return engineInstance && typeof engineInstance.resetHighScore === 'function' && engineInstance.resetHighScore(); },
-        isPlaying: function () { return engineInstance && typeof engineInstance.isPlaying === 'function' ? engineInstance.isPlaying() : false; },
-        isPaused: function () { return engineInstance && typeof engineInstance.isPaused === 'function' ? engineInstance.isPaused() : false; },
-        setGameSpeed: function (s) { return engineInstance && typeof engineInstance.setGameSpeed === 'function' && engineInstance.setGameSpeed(s); },
-        setScoreChangeCallback: function (cb) { return engineInstance && typeof engineInstance.setScoreChangeCallback === 'function' && engineInstance.setScoreChangeCallback(cb); },
-        raw: engineInstance,
-      };
-      try { window.miniGame = api; } catch (e) {}
+    // scrolling bg text
+    ctx.font = '9px "JetBrains Mono", monospace';
+    ctx.fillStyle = C.faint;
+    ctx.shadowBlur = 0;
+    for (const line of bgLines) {
+      ctx.fillText(line, line.x, line.y);
+    }
+  }
+
+  function drawGround() {
+    // ground fill
+    ctx.fillStyle = C.surface;
+    ctx.fillRect(0, GROUND_Y, W, H - GROUND_Y);
+
+    // ground line with glow
+    ctx.shadowBlur = 8;
+    ctx.shadowColor = C.green;
+    ctx.fillStyle = C.dim;
+    ctx.fillRect(0, GROUND_Y, W, 1);
+    ctx.shadowBlur = 0;
+
+    // tick marks
+    const tickOffset = Math.floor(groundOffset) % 32;
+    ctx.fillStyle = C.faint;
+    for (let tx = -tickOffset; tx < W; tx += 32) {
+      ctx.fillRect(tx, GROUND_Y + 3, 1, 4);
+    }
+  }
+
+  function drawScore() {
+    ctx.shadowBlur = 6;
+    ctx.shadowColor = C.bright;
+    ctx.fillStyle = C.bright;
+    ctx.font = '10px "Press Start 2P", monospace';
+    ctx.textAlign = 'right';
+    ctx.fillText('SCORE:' + String(Math.floor(score)).padStart(4, '0'), W - 8, 18);
+
+    ctx.shadowBlur = 0;
+    ctx.fillStyle = C.dim;
+    ctx.font = '8px "Press Start 2P", monospace';
+    ctx.fillText('BEST:' + String(highScore).padStart(4, '0'), W - 8, 30);
+    ctx.textAlign = 'left';
+  }
+
+  function drawParticles() {
+    for (const p of particles) {
+      const alpha = p.life / p.maxLife;
+      ctx.globalAlpha = alpha;
+      ctx.fillStyle = p.color;
+      ctx.fillRect(Math.round(p.x - p.size / 2), Math.round(p.y - p.size / 2), Math.round(p.size), Math.round(p.size));
+    }
+    ctx.globalAlpha = 1;
+  }
+
+  // ─── Screens ──────────────────────────────────────────────────────────────
+  function drawIdle() {
+    drawBackground();
+    drawGround();
+    drawPlayer(false);
+
+    // Title
+    ctx.shadowBlur = 12;
+    ctx.shadowColor = C.bright;
+    ctx.fillStyle = C.bright;
+    ctx.font = '16px "Press Start 2P", monospace';
+    ctx.textAlign = 'center';
+    ctx.fillText('TERMINAL RUNNER', W / 2, 90);
+
+    ctx.shadowBlur = 0;
+    ctx.fillStyle = C.dim;
+    ctx.font = '8px "Press Start 2P", monospace';
+    ctx.fillText('v1.0 — PHOSPHOR EDITION', W / 2, 108);
+
+    if (blinkOn) {
+      ctx.shadowBlur = 6;
+      ctx.shadowColor = C.green;
+      ctx.fillStyle = C.green;
+      ctx.font = '8px "Press Start 2P", monospace';
+      ctx.fillText('> PRESS SPACE TO START', W / 2, 132);
+      ctx.shadowBlur = 0;
     }
 
-    // Wire controls after engine is ready
-    function wireControls() {
-      // Update score UI via callback (for immediate updates)
-      if (engine && typeof engine.setScoreChangeCallback === 'function') {
-        engine.setScoreChangeCallback(updateScoreUI);
-      }
+    ctx.textAlign = 'left';
+  }
 
-      // Also listen for engine 'score' events (backup/consistency)
-      if (engine && typeof engine.addEventListener === 'function') {
-        engine.addEventListener('score', function (e) {
-          updateScoreUI(e.data.score);
-        });
-        engine.addEventListener('gamestart', function (e) { dispatchGameEvent('game:start', e); });
-        engine.addEventListener('pause', function (e) { dispatchGameEvent('game:pause', e); });
-        engine.addEventListener('gameover', function (e) { dispatchGameEvent('game:gameover', e); });
-        engine.addEventListener('collect', function (e) { dispatchGameEvent('game:collect', e); });
-      }
+  function drawPaused() {
+    // overlay
+    ctx.fillStyle = 'rgba(6,10,6,0.6)';
+    ctx.fillRect(0, 0, W, H);
 
-      if (startBtn) startBtn.addEventListener('click', function () {
-        try {
-          if (window.miniGame && typeof window.miniGame.isPlaying === 'function' && window.miniGame.isPlaying()) {
-            if (typeof window.miniGame.raw === 'object' && typeof window.miniGame.raw.stop === 'function') window.miniGame.raw.stop();
-            startBtn.textContent = 'Start';
-            startBtn.setAttribute('aria-pressed', 'false');
-          } else {
-            if (typeof window.miniGame.start === 'function') window.miniGame.start();
-            startBtn.textContent = 'Stop';
-            startBtn.setAttribute('aria-pressed', 'true');
-          }
-        } catch (e) {
-          console.error('Start button error:', e);
+    ctx.shadowBlur = 10;
+    ctx.shadowColor = C.green;
+    ctx.fillStyle = C.green;
+    ctx.font = '14px "Press Start 2P", monospace';
+    ctx.textAlign = 'center';
+    ctx.fillText('PAUSED', W / 2, H / 2);
+
+    ctx.shadowBlur = 0;
+    ctx.fillStyle = C.dim;
+    ctx.font = '7px "Press Start 2P", monospace';
+    ctx.fillText('P TO RESUME', W / 2, H / 2 + 18);
+    ctx.textAlign = 'left';
+  }
+
+  function drawGameOver() {
+    // semi-transparent overlay
+    ctx.fillStyle = 'rgba(6,10,6,0.85)';
+    ctx.fillRect(0, 0, W, H);
+
+    // terminal box
+    const bx = W / 2 - 110;
+    const by = H / 2 - 55;
+    const bw = 220;
+    const bh = 110;
+    ctx.fillStyle = C.surface;
+    ctx.fillRect(bx, by, bw, bh);
+    ctx.strokeStyle = C.border;
+    ctx.lineWidth = 1;
+    ctx.strokeRect(bx + 0.5, by + 0.5, bw - 1, bh - 1);
+    ctx.strokeStyle = C.faint;
+    ctx.strokeRect(bx + 3.5, by + 3.5, bw - 7, bh - 7);
+
+    ctx.textAlign = 'center';
+
+    ctx.shadowBlur = 10;
+    ctx.shadowColor = C.bright;
+    ctx.fillStyle = C.bright;
+    ctx.font = '14px "Press Start 2P", monospace';
+    ctx.fillText('GAME OVER', W / 2, by + 30);
+
+    ctx.shadowBlur = 0;
+    ctx.fillStyle = C.green;
+    ctx.font = '10px "Press Start 2P", monospace';
+    ctx.fillText('SCORE:' + String(Math.floor(score)).padStart(4, '0'), W / 2, by + 52);
+
+    ctx.fillStyle = C.dim;
+    ctx.font = '8px "Press Start 2P", monospace';
+    ctx.fillText('BEST:' + String(highScore).padStart(4, '0'), W / 2, by + 68);
+
+    if (blinkOn) {
+      ctx.shadowBlur = 4;
+      ctx.shadowColor = C.green;
+      ctx.fillStyle = C.green;
+      ctx.font = '7px "Press Start 2P", monospace';
+      ctx.fillText('> PRESS SPACE TO RETRY', W / 2, by + 90);
+      ctx.shadowBlur = 0;
+    }
+
+    ctx.textAlign = 'left';
+  }
+
+  // ─── AABB collision ───────────────────────────────────────────────────────
+  function rectsOverlap(
+    ax: number, ay: number, aw: number, ah: number,
+    bx: number, by: number, bw: number, bh: number
+  ) {
+    return ax < bx + bw && ax + aw > bx && ay < by + bh && ay + ah > by;
+  }
+
+  // ─── Main game loop ───────────────────────────────────────────────────────
+  let lastTime = 0;
+
+  function loop(now: number) {
+    const dt = Math.min((now - lastTime) / (1000 / 60), 3); // cap at 3 frames
+    lastTime = now;
+
+    // ── blink ──
+    blinkTimer++;
+    if (blinkTimer >= 30) { blinkOn = !blinkOn; blinkTimer = 0; }
+
+    if (state === 'idle') {
+      drawIdle();
+      requestAnimationFrame(loop);
+      return;
+    }
+
+    if (state === 'paused') {
+      // redraw last frame then overlay
+      drawPausedFrame();
+      requestAnimationFrame(loop);
+      return;
+    }
+
+    if (state === 'gameover') {
+      drawGameOverFrame();
+      requestAnimationFrame(loop);
+      return;
+    }
+
+    // ── running ──────────────────────────────────────────────────────────────
+    gameSpeed = Math.min(gameSpeed + SPEED_INC * dt, SPEED_MAX);
+
+    // scroll offsets
+    groundOffset += gameSpeed * dt;
+
+    // bg line scroll
+    for (const line of bgLines) {
+      line.x -= line.speed * gameSpeed * dt * 0.15;
+      if (line.x < -200) line.x = W + 10;
+    }
+
+    // player physics
+    playerVY += GRAVITY * dt;
+    playerY  += playerVY * dt;
+
+    if (playerY >= GROUND_Y) {
+      playerY   = GROUND_Y;
+      playerVY  = 0;
+      jumpsLeft = MAX_JUMPS;
+    }
+
+    const isJumping = playerY < GROUND_Y;
+
+    // animation
+    if (!isJumping) {
+      animTimer += dt;
+      if (animTimer >= 8) { animFrame = animFrame === 0 ? 1 : 0; animTimer = 0; }
+    }
+
+    // obstacle spawning
+    obsCountdown -= dt;
+    if (obsCountdown <= 0) {
+      // check last obstacle gap
+      const lastObs = obstacles[obstacles.length - 1];
+      if (!lastObs || W - (lastObs.x + lastObs.w) >= 200) {
+        spawnObstacle();
+      }
+      obsCountdown = nextObsInterval(gameSpeed);
+    }
+
+    // collectible spawning
+    collectCountdown -= dt;
+    if (collectCountdown <= 0) {
+      collectibles.push({
+        x: W + 4,
+        y: GROUND_Y - 80 - Math.floor(Math.random() * 60),
+        collected: false,
+      });
+      collectCountdown = nextCollectInterval();
+    }
+
+    // move obstacles
+    for (let i = obstacles.length - 1; i >= 0; i--) {
+      obstacles[i].x -= gameSpeed * dt;
+      if (obstacles[i].x + obstacles[i].w < -10) obstacles.splice(i, 1);
+    }
+
+    // move collectibles
+    for (let i = collectibles.length - 1; i >= 0; i--) {
+      collectibles[i].x -= gameSpeed * dt;
+      if (collectibles[i].x < -20) collectibles.splice(i, 1);
+    }
+
+    // update particles
+    for (let i = particles.length - 1; i >= 0; i--) {
+      const p = particles[i];
+      p.x  += p.vx * dt;
+      p.y  += p.vy * dt;
+      p.vy += 0.15 * dt;
+      p.life -= dt;
+      if (p.life <= 0) particles.splice(i, 1);
+    }
+
+    // collision: obstacles
+    const pb = playerBox();
+    for (const obs of obstacles) {
+      if (rectsOverlap(pb.x, pb.y, pb.w, pb.h, obs.x, obs.y, obs.w, obs.h)) {
+        // death
+        state = 'gameover';
+        flashFrames = 10;
+        spawnParticles(playerX, playerY - 11, 12, ['#cc0000', '#880000', '#ff4444', C.dim]);
+        if (score > highScore) {
+          highScore = Math.floor(score);
+          try { localStorage.setItem('termRunHS', String(highScore)); } catch (_) {}
+          updateHiScoreDisplay();
         }
-      });
-
-      if (pauseBtn) pauseBtn.addEventListener('click', function () {
-        if (typeof engine.pause === 'function') engine.pause();
-        var pressed = engine && typeof engine.isPaused === 'function' ? !!engine.isPaused() : false;
-        pauseBtn.setAttribute('aria-pressed', String(pressed));
-        pauseBtn.textContent = pressed ? 'Resume' : 'Pause';
-      });
-
-      if (muteBtn) muteBtn.addEventListener('click', function () {
-        var audio = engine && typeof engine.getAudioSystem === 'function' && engine.getAudioSystem();
-        if (!audio) return;
-        if (typeof audio.isEnabled === 'function' && audio.isEnabled()) {
-          audio.mute && audio.mute();
-          muteBtn.setAttribute('aria-pressed', 'true');
-          muteBtn.textContent = 'Muted';
-        } else {
-          audio.unmute && audio.unmute();
-          muteBtn.setAttribute('aria-pressed', 'false');
-          muteBtn.textContent = 'Mute';
-        }
-      });
-
-      if (volumeEl) volumeEl.addEventListener('input', function (ev) {
-        var v = parseFloat(ev.target.value || '0.3');
-        var audio = engine && typeof engine.getAudioSystem === 'function' && engine.getAudioSystem();
-        if (audio && typeof audio.setVolume === 'function') audio.setVolume(v);
-      });
-
-      // Keyboard handlers
-      window.addEventListener('keydown', function (e) {
-        if (!engine) return;
-        if (e.code === 'Space') {
-          e.preventDefault();
-          if (engine.inputHandler && typeof engine.inputHandler.trigger === 'function') {
-            engine.inputHandler.trigger('space');
-          } else if (engine.raw && engine.raw.player && typeof engine.raw.player.jump === 'function') {
-            engine.raw.player.jump();
-          }
-        }
-        if (e.key === 'p' || e.key === 'P') {
-          if (typeof engine.pause === 'function') engine.pause();
-        }
-      });
-
-      // Attach touch/pointer handlers to canvas element
-      if (engine && engine.inputHandler && typeof engine.inputHandler.attachToElement === 'function') {
-        engine.inputHandler.attachToElement(canvas);
+        break;
       }
-
-      // Click to jump as well when user taps the canvas area
-      canvas.addEventListener('click', function () {
-        if (engine && engine.inputHandler && typeof engine.inputHandler.trigger === 'function') engine.inputHandler.trigger('space');
-      });
     }
 
-    // Dynamic import of GameEngine and initialization
-    function loadEngine() {
-      if (engineReady || loading) return Promise.resolve();
-      loading = true;
-      return import('/game/game-engine.js')
-        .then(function (module) {
-          var GameEngine = module.GameEngine || module.default;
-          var vol = '0.3';
-          try { if (volumeEl && typeof volumeEl.value === 'string') vol = volumeEl.value; } catch (e) {}
-          var config = {
-            width: 240,
-            height: 216,
-            targetFPS: 60,
-            gravity: 0.8,
-            jumpPower: -12,
-            gameSpeed: 4,
-            spawnRate: 0.02,
-            canvas: canvas,
-            audio: {
-              enabled: true,
-              volume: parseFloat(vol),
-            },
-            render: {
-              pixelated: true,
-              doubleBuffering: true,
-            },
-          };
-
-          engine = new GameEngine(config);
-          if (typeof engine.initialize === 'function') engine.initialize();
-
-          exposeAPI(engine);
-          wireControls();
-
-          engineReady = true;
-          loading = false;
-
-          // Test backward compatibility: set ready state to true
-          try { 
-            window.__miniGameReady = true;
-            if (readyPromiseResolve) readyPromiseResolve(true);
-            // Dispatch deterministic ready signal for tests
-            window.dispatchEvent(new CustomEvent('miniGame:ready', { detail: { ready: true } }));
-          } catch (e) {}
-
-          // remove LOADING overlay
-          var overlay = document.getElementById('mini-game-overlay');
-          if (overlay) overlay.style.display = 'none';
-
-          dispatchGameEvent('game:ready', { ready: true });
-        })
-        .catch(function (err) {
-          console.error('Failed to load GameEngine', err);
-          loading = false;
-        });
+    // collision: collectibles
+    for (const coin of collectibles) {
+      if (coin.collected) continue;
+      if (rectsOverlap(pb.x, pb.y, pb.w, pb.h, coin.x - 6, coin.y - 6, 12, 12)) {
+        coin.collected = true;
+        score += 10;
+        spawnParticles(coin.x, coin.y, 8, [C.bright, C.green, C.dim]);
+      }
     }
 
-    // Expose loadEngine to window for handlers
-    try { window.loadEngine = loadEngine; } catch (e) {}
+    // score
+    score += dt;
+    if (score > highScore) {
+      highScore = Math.floor(score);
+    }
 
-    // IntersectionObserver fallback
-    function observeVisibility() {
-      // TEST_MODE_GUARD: Skip IntersectionObserver in test mode for deterministic loading
-      if (window.__TEST_MODE === true) {
-        loadEngine();
-        return;
-      }
-      
-      if ('IntersectionObserver' in window) {
-        var io = new IntersectionObserver(function (entries, obs) {
-          entries.forEach(function (entry) {
-            if (entry.isIntersecting) {
-              loadEngine();
-              obs.disconnect();
-            }
-          });
-        }, { rootMargin: '200px' });
-        io.observe(root);
+    // ── draw ─────────────────────────────────────────────────────────────────
+    drawBackground();
+    drawGround();
+
+    // obstacles
+    for (const obs of obstacles) {
+      if (obs.type === 'error') {
+        drawErrorBlock(obs.x, obs.y, obs.w, obs.h);
       } else {
-        // fallback: load after short timeout
-        setTimeout(loadEngine, 2000);
+        drawSpike(obs.x, obs.y, obs.w, obs.h);
       }
     }
 
-    // Start loading on gesture as well
-    if (cta) cta.addEventListener('click', function () {
-      return loadEngine().then(function () {
-        try { if (window.miniGame && typeof window.miniGame.start === 'function') window.miniGame.start(); } catch (e) {}
-      });
-    });
+    // collectibles
+    for (const coin of collectibles) {
+      if (!coin.collected) drawCollectible(coin.x, coin.y, 1);
+    }
 
-    // Observe visibility to lazy-load
-    observeVisibility();
+    drawParticles();
+    drawPlayer(isJumping);
+    drawScore();
 
-    // Expose a small ready promise for tests
-    var readyPromiseResolve = null;
-    try {
-      window.__miniGameReadyPromise = new Promise(function (resolve) {
-        readyPromiseResolve = resolve;
-        var check = function () {
-          if (engineReady) return resolve(true);
-          setTimeout(check, 100);
-        };
-        check();
-      });
-    } catch (e) {}
+    // flash on death
+    if (flashFrames > 0) {
+      ctx.fillStyle = 'rgba(200,0,0,0.15)';
+      ctx.fillRect(0, 0, W, H);
+      flashFrames--;
+    }
 
-    // Provide a teardown on unload
-    window.addEventListener('beforeunload', function () {
-      try {
-        engine && typeof engine.destroy === 'function' && engine.destroy();
-      } catch (e) {
-        // ignore
-      }
-    });
+    requestAnimationFrame(loop);
+  }
 
-    // Accessibility: focus canvas when ready
-    try {
-      canvas.setAttribute('tabindex', '0');
-      canvas.setAttribute('role', 'application');
-      canvas.setAttribute('aria-label', 'Code Runner game canvas');
-    } catch (e) {}
+  // paused/gameover need to re-render background + entities
+  function drawPausedFrame() {
+    drawBackground();
+    drawGround();
+    for (const obs of obstacles) {
+      if (obs.type === 'error') drawErrorBlock(obs.x, obs.y, obs.w, obs.h);
+      else drawSpike(obs.x, obs.y, obs.w, obs.h);
+    }
+    for (const coin of collectibles) {
+      if (!coin.collected) drawCollectible(coin.x, coin.y, 1);
+    }
+    drawPlayer(playerY < GROUND_Y);
+    drawScore();
+    drawPaused();
+  }
 
-    // GAME OVER overlay wiring
-    (function () {
-      var gameoverEl = document.getElementById('game-over-overlay');
-      var scoreEl = document.getElementById('gameover-score');
-      var restartBtn = document.getElementById('gameover-restart');
-      var hudScore = document.getElementById('mini-game-score');
-      var pendingCalls = [];
-      var pendingInterval = null;
+  function drawGameOverFrame() {
+    drawBackground();
+    drawGround();
+    for (const obs of obstacles) {
+      if (obs.type === 'error') drawErrorBlock(obs.x, obs.y, obs.w, obs.h);
+      else drawSpike(obs.x, obs.y, obs.w, obs.h);
+    }
+    for (const coin of collectibles) {
+      if (!coin.collected) drawCollectible(coin.x, coin.y, 0.5);
+    }
+    drawParticles();
+    drawScore();
+    drawGameOver();
+  }
 
-      function flushPending() {
-        if (!window.miniGame) return;
-        pendingCalls.forEach(function (fn) { try { fn(); } catch (e) {} });
-        pendingCalls = [];
-        if (pendingInterval) { clearInterval(pendingInterval); pendingInterval = null; }
-      }
-
-      function callMiniGame(fn) {
-        if (window.miniGame) {
-          try { fn(); } catch (e) {}
-        } else {
-          pendingCalls.push(fn);
-          if (!pendingInterval) {
-            pendingInterval = setInterval(function () {
-              if (window.miniGame) flushPending();
-            }, 100);
-          }
-        }
-      }
-
-      function showGameOver(finalScore) {
-        if (!gameoverEl) return;
-        gameoverEl.classList.remove('hidden');
-        gameoverEl.setAttribute('aria-hidden', 'false');
-        if (scoreEl) scoreEl.textContent = 'FINAL: ' + String(finalScore).padStart(4, '0');
-        // dispatch analytics-safe event from root
-        try { root.dispatchEvent(new CustomEvent('ui:gameover-shown', { detail: { score: Number(finalScore) } })); } catch (e) {}
-        // focus restart button
-        try { if (restartBtn && typeof restartBtn.focus === 'function') restartBtn.focus(); } catch (e) {}
-      }
-
-      function hideGameOver() {
-        if (!gameoverEl) return;
-        gameoverEl.classList.add('hidden');
-        gameoverEl.setAttribute('aria-hidden', 'true');
-        // return focus to canvas
-        try { if (canvas && typeof canvas.focus === 'function') canvas.focus(); } catch (e) {}
-      }
-
-      // Listen for engine events emitted from root or document
-      function onGameOver(e) {
-        var final = e && e.detail && typeof e.detail.score === 'number' ? e.detail.score : (window.miniGame && typeof window.miniGame.getScore === 'function' ? window.miniGame.getScore() : 0);
-        showGameOver(final);
-      }
-      function onResetStart() {
-        hideGameOver();
-        // reset HUD
-        try { if (hudScore) hudScore.textContent = 'SCORE: 0000'; } catch (e) {}
-      }
-
-      // support both root-dispatched events and document-level
-      root.addEventListener && root.addEventListener('game:gameover', onGameOver);
-      root.addEventListener && root.addEventListener('game:reset', onResetStart);
-      root.addEventListener && root.addEventListener('game:start', onResetStart);
-      document.addEventListener && document.addEventListener('game:gameover', onGameOver);
-      document.addEventListener && document.addEventListener('game:reset', onResetStart);
-      document.addEventListener && document.addEventListener('game:start', onResetStart);
-
-      // Restart button wiring
-      if (restartBtn) {
-        restartBtn.addEventListener('click', function () {
-          callMiniGame(function () {
-            try { window.miniGame.restart && window.miniGame.restart(); } catch (e) {}
-          });
-          // hide overlay and reset HUD immediately
-          hideGameOver();
-          try { if (hudScore) hudScore.textContent = 'SCORE: 0000'; } catch (e) {}
-        });
-
-        // keyboard activation on Restart (Enter/Space)
-        restartBtn.addEventListener('keydown', function (ev) {
-          if (ev.key === 'Enter' || ev.key === ' ' || ev.code === 'Space') {
-            ev.preventDefault();
-            restartBtn.click();
-          }
-        });
-      }
-
-      // Close overlay with Escape and call reset
-      window.addEventListener('keydown', function (ev) {
-        if (!gameoverEl) return;
-        var isOpen = gameoverEl.getAttribute('aria-hidden') === 'false';
-        if (!isOpen) return;
-        if (ev.key === 'Escape') {
-          // hide overlay and reset engine
-          hideGameOver();
-          callMiniGame(function () { try { window.miniGame.reset && window.miniGame.reset(); } catch (e) {} });
-        }
-      });
-
-    })();
-
-  })();
+  requestAnimationFrame(loop);
+})();
 </script>
