@@ -4,7 +4,7 @@ description: "A lightweight personal AI assistant with self-learning, long-term 
 pubDate: 2026-04-15
 tags: ["Go", "AI/LLM", "CLI"]
 repoUrl: "https://github.com/bigknoxy/joshbot"
-heroImage: "/assets/images/projects/joshbot-hero.png"
+heroImage: "/assets/images/projects/joshbot-hero.svg"
 featured: false
 ---
 

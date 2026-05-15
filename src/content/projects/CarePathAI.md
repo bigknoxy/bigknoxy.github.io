@@ -4,7 +4,7 @@ description: "AI-powered healthcare pathway optimization. Helps healthcare provi
 pubDate: 2026-04-01
 tags: ["Python", "AI/ML", "Healthcare"]
 repoUrl: "https://github.com/bigknoxy/CarePathAI"
-heroImage: "/assets/images/projects/carepathai-hero.png"
+heroImage: "/assets/images/projects/carepathai-hero.svg"
 featured: false
 ---
 

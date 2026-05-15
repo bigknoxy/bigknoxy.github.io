@@ -2,7 +2,7 @@
 title: "ideavault"
 description: "A fast, local-first CLI idea manager built with Rust. Capture, organize, and retrieve your ideas without ever leaving the terminal."
 pubDate: 2026-04-10
-heroImage: "/assets/images/projects/ideavault-hero.png"
+heroImage: "/assets/images/projects/ideavault-hero.svg"
 tags:
   - "Rust"
   - "CLI"

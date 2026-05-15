@@ -4,7 +4,7 @@ description: "Production-ready agentic SDLC framework with built-in governance, 
 pubDate: 2026-04-01
 tags: ["Python", "AI/LLM", "Compliance"]
 repoUrl: "https://github.com/bigknoxy/agentic-sdlc-framework"
-heroImage: "/assets/images/projects/sdlc-hero.png"
+heroImage: "/assets/images/projects/sdlc-hero.svg"
 featured: false
 ---
 
