@@ -3,7 +3,7 @@ title: "HashPilot"
 description: "Global, tool-agnostic structured editing core for AI coding agents. Provides syntax-aware editing via tree-sitter, hash-anchored content replacement, and batched verification — integrated with Claude Code, OpenCode, and Pi."
 pubDate: 2026-05-05
 tags: ["TypeScript", "Bun", "tree-sitter", "AST", "AI Tooling", "Developer Tools"]
-repoUrl: "https://github.com/bigknoxy/HashPilot"
+repoUrl: ""
 featured: false
 ---
 
@@ -31,8 +31,4 @@ When AI agents edit files in multi-step workflows, earlier edits shift line numb
 
 ## Integrations
 
-Adapters for Claude Code, OpenCode, and Pi are installed automatically:
-
-```bash
-curl -fsSL https://raw.githubusercontent.com/bigknoxy/HashPilot/main/scripts/install.sh | sh
-```
+Adapters for Claude Code, OpenCode, and Pi are included in the local install.

@@ -1,6 +1,6 @@
 ---
 title: "Chicken Mob"
-description: "A fast-paced, lane-based crowd game with chickens. Because why not? Built with TypeScript and Canvas."
+description: "A fast-paced cannon-launching crowd game with chickens. Fire flocks through multiplier gates. Because why not? Built with TypeScript and Canvas."
 pubDate: 2026-04-01
 tags: ["TypeScript", "Canvas", "Web Audio", "Game"]
 repoUrl: "https://github.com/bigknoxy/chicken-mob"
@@ -8,24 +8,25 @@ heroImage: "/assets/images/projects/chicken-mob-hero.svg"
 featured: true
 ---
 
-## Herd the Chickens!
+## Launch the Chickens!
 
-Chicken Mob is a lane-based crowd game where you control a chicken herder trying to manage... well, a mob of chickens.
+Chicken Mob is a barn-cannon game where you aim and fire chicken flocks through multiplier gates. It's like angry birds meets a crowd simulator, if the birds were chickens and the crowd was a mob.
 
 ## Features
 
-- **Lane-based gameplay**: Chickens run in lanes, you switch between them
-- **Power-ups**: Collect corn to speed up, avoid obstacles
-- **Increasing difficulty**: More chickens, faster speeds, more chaos
-- **Original chicken sounds**: Yes, I recorded actual chickens
-- **Retro pixel art**: Deliberately charming visuals
+- **Barn cannons**: 3 unique cannons with different firing patterns
+- **Multiplier gates**: Fire chickens through gates to grow your flock
+- **5 chicken types**: Clucky, Hen Tank, Rooster Bomber, Speed Chick, Golden Goose
+- **3 fox enemies**: Scout, Brute, and Sniper foxes try to stop you
+- **15 hand-authored levels**: Progressive difficulty from tutorial to multi-lane boss battles
+- **Offline income**: Chicken Coop generates corn while you're away
+- **Meta progression**: Unlock and upgrade your arsenal between runs
 
 ## Technical Highlights
 
-- Object pooling for 500+ chickens at 60fps
-- Canvas-based rendering with dirty rectangles
-- Web Audio API for positional sound
-- Mobile touch controls
+- Count-based aggregate mob rendering for hundreds of units at 60fps
+- Canvas 2D rendering with procedural audio via Web Audio API
+- Mobile touch controls with portrait orientation lock
 - Progressive Web App support
 
 ## Why Chickens?

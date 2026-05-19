@@ -36,7 +36,9 @@ ghAuto helps you:
 ## Getting Started
 
 ```bash
-pip install ghauto
+git clone https://github.com/bigknoxy/ghAuto
+cd ghAuto
+pip install -e .
 ghauto auth
 ghauto analyze --user bigknoxy
 ```

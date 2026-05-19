@@ -15,48 +15,49 @@ featured: true
 
 # frame-kit
 
-**frame-kit** is a shell-native implementation of the agentic FRAME loop — Focus, Requirements, Automate, Measure, Evaluate — designed for developers who live in the terminal and want AI-assisted development without leaving their workflow.
+**frame-kit** is a Claude Code plugin that implements the agentic FRAME loop — Focus, Requirements, Automate, Multi-agent, Evaluate — right inside your Claude Code sessions.
 
-## The FRAME Loop, Terminal-Native
+## The FRAME Loop in Claude Code
 
-frame-kit brings the structured agentic development cycle straight to your shell:
+frame-kit brings structured agentic development to Claude Code with chat commands:
 
-- **F**ocus: Define what you're building with a simple prompt
-- **R**equirements: Auto-gather and document what the project needs
-- **A**utomate: Dispatch AI agents to handle the implementation
-- **M**easure: Run tests, checks, and validation automatically
+- **F**ocus: `/focus` — Define what you're building with a clear prompt
+- **R**equirements: `/spec` — Auto-gather and document project requirements
+- **A**utomate: Dispatch AI agents to handle implementation
+- **M**ulti-agent: `/handoff` — Pass context between specialized agents
 - **E**valuate: Review results and decide — ship it or iterate
 
-## Why Shell?
+## Why Claude Code?
 
-Because your terminal is home. frame-kit:
+Claude Code is your terminal-based AI coding partner. frame-kit layers structure on top:
 
-- Works with any POSIX-compatible shell
-- Zero runtime dependencies — just bash and curl
-- Integrates with your existing aliases, scripts, and tooling
-- Pipes everywhere — compose with grep, jq, fzf, whatever you want
-- Fast. Like, *really* fast. No Node_modules in sight.
+- **FRAME commands**: `/frame-init`, `/spec`, `/handoff` for guided development
+- **Checkpointing**: Save and resume FRAME sessions within Claude Code
+- **Templates**: Reusable project templates for common workflows
+- **Skills**: Composable agent skills for specialized tasks
 
 ## Key Features
 
-- **Interactive mode**: Step through each FRAME phase with guided prompts
-- **Automated mode**: Run the full loop hands-free for well-defined tasks
-- **Checkpointing**: Save and resume FRAME sessions
-- **Composable**: Pipe FRAME outputs into other tools
-- **Lightweight**: The whole thing is shell scripts. Seriously.
+- **Chat commands**: `/frame-init` starts a new FRAME session
+- **Spec generation**: `/spec` creates structured requirements documents
+- **Agent handoff**: `/handoff` passes context between agents cleanly
+- **Checkpointing**: Save progress and resume later
+- **Lightweight**: Pure shell scripts, integrates with existing Claude Code setup
 
 ## Getting Started
 
+Install via Claude Code plugin marketplace:
 ```bash
-git clone https://github.com/bigknoxy/frame-kit.git
-cd frame-kit
-chmod +x frame
-./frame init
-./frame start --interactive
+/plugin marketplace add bigknoxy/frame-kit
+```
+
+Then start a session:
+```bash
+/frame-init
 ```
 
 ## Philosophy
 
-The best tools get out of your way. frame-kit doesn't try to be an IDE, a framework, or a platform. It's just a loop — a really useful one that happens to fit perfectly in your terminal.
+The best tools get out of your way. frame-kit doesn't try to be an IDE, a framework, or a platform. It's just a loop — a really useful one that happens to fit perfectly in your terminal workflow.
 
 Source Code: [GitHub (frame-kit)](https://github.com/bigknoxy/frame-kit)

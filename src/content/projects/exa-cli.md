@@ -15,7 +15,7 @@ exa-cli brings the power of Exa's AI search to your terminal:
 - **Semantic search**: Find relevant content, not just keyword matches
 - **Web crawling**: Extract content from pages automatically
 - **Research summaries**: Get AI-generated summaries of findings
-- **Export options**: Save results as JSON, Markdown, or HTML
+- **Export options**: Save results as text, JSON, or Markdown
 - **MCP integration**: Works with Claude and other MCP clients
 
 ## Why Exa?

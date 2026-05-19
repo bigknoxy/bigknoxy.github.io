@@ -15,7 +15,7 @@ A structured approach to agentic development:
 - **F**ocus: Define what we're building
 - **R**equirements: Gather and document needs
 - **A**utomate: Let AI agents handle implementation
-- **M**easure: Verify it works
+- **M**ulti-agent: Dispatch specialized AI agents
 - **E**valuate: Decide to ship or iterate
 
 ## Key Features
@@ -32,7 +32,4 @@ In regulated industries, speed and compliance are often at odds. This framework 
 ## Tech Stack
 
 - Python for core framework
-- Integration with multiple LLM providers
-- SQLite for audit logging
-- Docker for isolation
 - GitHub Actions for CI/CD

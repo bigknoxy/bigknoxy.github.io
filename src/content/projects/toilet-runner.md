@@ -20,7 +20,7 @@ featured: false
 ## Gameplay
 
 - **Endless Running**: Keep rolling as long as you can
-- **3D Obstacles**: Dodge poop, plungers, and other bathroom hazards
+- **3D Obstacles**: Dodge piles of poop on a three-lane path
 - **Silly Theme**: Embrace the absurdity
 - **High Score**: Compete for the longest run
 
