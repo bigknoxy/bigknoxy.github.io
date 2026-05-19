@@ -47,7 +47,7 @@ Because your ideas deserve speed:
 ## Getting Started
 
 ```bash
-cargo install ideavault
+curl -fsSL https://raw.githubusercontent.com/bigknoxy/ideavault/main/install.sh | bash
 ideavault init
 ideavault add "Build a compiler for emoji" --tags "crazy,side-project"
 ideavault search "emoji"

@@ -28,8 +28,7 @@ featured: true
 
 - **TypeScript**: Type-safe game development
 - **PWA**: Installable progressive web app
-- **Voxel Engine**: Custom voxel rendering
-- **WebGL**: Hardware-accelerated graphics
+- **Three.js**: WebGL-powered 3D rendering with custom voxel meshing
 
 ## Play Now
 

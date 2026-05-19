@@ -19,13 +19,13 @@ AI coding tools each have their own skill/command systems. Team AI Warehouse sta
 
 | Command | Description |
 |---------|-------------|
-| `uaa init` | Initialize warehouse |
-| `uaa sync --all` | Sync skills to all 4 tools |
-| `uaa status` | Show skill counts per tool |
-| `uaa list` | List all available skills |
-| `uaa validate` | Validate SKILL.md files |
-| `uaa tag v1.0.0` | Create version tag |
-| `uaa contrib <skill>` | Create PR for a new skill |
+| `python3 scripts/uaa init` | Initialize warehouse |
+| `python3 scripts/uaa sync --all` | Sync skills to all 4 tools |
+| `python3 scripts/uaa status` | Show skill counts per tool |
+| `python3 scripts/uaa list` | List all available skills |
+| `python3 scripts/uaa validate` | Validate SKILL.md files |
+| `python3 scripts/uaa tag v1.0.0` | Create version tag |
+| `python3 scripts/uaa contrib <skill>` | Create PR for a new skill |
 
 ## Structure
 

@@ -36,7 +36,7 @@ Go was chosen for:
 ## Getting Started
 
 ```bash
-go install github.com/bigknoxy/joshbot@latest
+go install github.com/bigknoxy/joshbot/cmd/joshbot@latest
 joshbot init
 joshbot chat
 ```
