@@ -83,7 +83,7 @@ func GetHomeDir() (string, error) {
 }
 ```
 
-Six call sites in `main.go` updated. PR #40 touched 11 files, 348 additions, 84 deletions — not bad for a "the path is wrong" bug.
+Six call sites in `main.go` updated. PR #40 touched 9 files, 264 additions, 84 deletions — not bad for a "the path is wrong" bug.
 
 ---
 
