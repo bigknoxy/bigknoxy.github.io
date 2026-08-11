@@ -1,7 +1,7 @@
 ---
 title: "Building a Trader P&L Writer for the Briefing Hub: Paper Trading, Safety, and Kalshi Integration"
 description: "A technical deep dive into how we added a daily trader P&L section to the Briefing Hub, integrating paper trading audit logs with Kalshi's public API, while enforcing strict safety rules and COI blocklists."
-date: 2026-08-07
+pubDate: 2026-08-07
 tags:
   - trading
   - briefing-hub
