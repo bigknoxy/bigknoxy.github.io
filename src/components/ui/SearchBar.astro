@@ -2,16 +2,18 @@
 // SearchBar.astro - Pagefind integration
 ---
 
-<style>
-  mark {
-    background: rgba(115, 195, 255, 0.2);
-    color: #73c3ff;
-    border-radius: 2px;
-    padding: 0 2px;
-  }
-</style>
-
-<div class="relative max-w-md mx-auto">
+<div class="relative max-w-md mx-auto relative">
+  <style>
+    /* Global mark highlight — applies to Pagefind-injected <mark> tags */
+    /* Astro scopes bare selectors to [data-astro-cid-*], which won't match
+       dynamically injected marks via innerHTML. Use :global() to bypass. */
+    :global(mark) {
+      background: rgba(115, 195, 255, 0.2);
+      color: #73c3ff;
+      border-radius: 2px;
+      padding: 0 2px;
+    }
+  </style>
   <label for="search-input" class="sr-only">Search posts</label>
   <input
     type="search"
