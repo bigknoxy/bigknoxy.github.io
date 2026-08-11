@@ -2,6 +2,15 @@
 // SearchBar.astro - Pagefind integration
 ---
 
+<style>
+  mark {
+    background: rgba(115, 195, 255, 0.2);
+    color: #73c3ff;
+    border-radius: 2px;
+    padding: 0 2px;
+  }
+</style>
+
 <div class="relative max-w-md mx-auto">
   <label for="search-input" class="sr-only">Search posts</label>
   <input
@@ -114,7 +123,10 @@
       titleEl.textContent = r.title;
       const excerptEl = document.createElement('div');
       excerptEl.className = 'font-mono text-[10px] text-phosphor-text mt-1';
-      excerptEl.textContent = r.excerpt || '';
+      // Pagefind returns excerpts with <mark> tags for highlighted matches.
+      // Strip any non-mark tags for safety, then render marks as real HTML.
+      const safeExcerpt = (r.excerpt || '').replace(/<\/?((?!mark\b)[^>]+)>/gi, '');
+      excerptEl.innerHTML = safeExcerpt;
       a.appendChild(titleEl);
       a.appendChild(excerptEl);
       a.tabIndex = -1; // focusable programmatically
