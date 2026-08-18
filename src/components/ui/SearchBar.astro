@@ -98,6 +98,7 @@
       pagefindReady = true;
       return pagefind;
     } catch (err) {
+      loadingPagefind = false;
       throw new Error('Failed to load pagefind: ' + err.message);
     }
   }
@@ -150,10 +151,6 @@
         // Enter will activate the anchor by default
       });
 
-      a.addEventListener('click', () => {
-        // leave default navigation behavior
-      });
-
       item.appendChild(a);
       list.appendChild(item);
     });
@@ -171,16 +168,6 @@
     if (node) {
       node.focus();
     }
-  }
-
-  function escapeHtml(str) {
-    if (!str) return '';
-    return String(str)
-      .replace(/&/g, '&amp;')
-      .replace(/</g, '&lt;')
-      .replace(/>/g, '&gt;')
-      .replace(/"/g, '&quot;')
-      .replace(/'/g, '&#39;');
   }
 
   async function doSearch(query) {
@@ -204,17 +191,12 @@
     // perform search
     setSearchingState();
     try {
-      console.log('Performing search for:', query);
       const res = await window.pagefind.search(query);
-      console.log('Search response:', res);
-    // Debug: show raw result
-      console.log('Raw result:', res.results[0]);
-      // map results.results - need to await the data() call for each result
+      // map results - need to await the data() call for each result
       const mapped = [];
       if (res && res.results) {
         for (const r of res.results) {
           const data = await r.data();
-          console.log('Result data:', data);
           mapped.push({
             url: data.url || '#',
             title: (data.meta && data.meta.title) ? data.meta.title : (data.url || ''),
@@ -222,7 +204,6 @@
           });
         }
       }
-      console.log('Mapped results:', mapped);
       currentResults = mapped;
       renderResults();
     } catch (err) {
@@ -248,8 +229,6 @@
       ev.preventDefault();
       clearResults();
       input.value = '';
-    } else if (ev.key === 'Enter') {
-      // If results visible and a result focused via keyboard, let Enter activate; otherwise do nothing special
     }
   });
 
