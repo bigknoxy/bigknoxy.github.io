@@ -38,3 +38,10 @@ coverage/
 tmp/
 temp/
 .gstack/
+
+# Playwright test artifacts
+playwright-report/
+test-results/
+playwright-results.json
+# Lean-ctx tool cache
+.lean-ctx/

@@ -25,24 +25,21 @@ Other useful commands:
 bun run lint       # format with Prettier
 bun run typecheck  # Astro type check
 bun test           # unit tests (Bun test runner)
-npx playwright test --project=chromium  # e2e tests (needs preview running)
+bunx playwright test                    # e2e tests (auto-starts preview on :4321)
 ```
 
 ## Architecture
 
-Two build pipelines:
-
-- **Astro build** (`bun run build`) — all pages, components, styles
-- **Vite game build** (`bun run build:game`) — bundles `src/game/` as a standalone ES library at `dist/game/game-engine.js`
+Everything is built by Astro (`bun run build`): pages, components, styles, and the pagefind search index — no separate build step.
 
 Content is managed through Astro content collections (`src/content/`):
 
 - `blog/` — markdown posts
 - `projects/` — markdown project entries with optional `demoUrl`, `repoUrl`, and `featured` flag
 
-The canvas game (Terminal Runner) lives in `src/components/game/MiniGame.astro` and is embedded directly on the homepage. It's a 60fps ECS-style game with Web Audio — no external dependencies.
+The canvas game (Terminal Runner) lives in `src/components/game/MiniGame.astro` and is embedded directly on the homepage. It's a self-contained 60fps canvas loop — no external bundle, no dependencies.
 
-Search is powered by [pagefind](https://pagefind.app). The index is generated as a post-build step and isn't part of the Astro build itself.
+Search is powered by [pagefind](https://pagefind.app); the index is generated during the Astro build via the `astro-pagefind` integration.
 
 ## Tech stack
 

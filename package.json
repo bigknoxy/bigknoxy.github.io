@@ -11,8 +11,7 @@
     "lint": "bunx prettier --write .",
     "typecheck": "bunx astro check",
     "test": "bun test --preload ./tests/test-setup.ts",
-    "test:unit": "bun test --preload ./tests/test-setup.ts tests/unit/**/*.test.*",
-    "test:e2e": "npx playwright test --project=chromium"
+    "test:e2e": "bunx playwright test"
   },
   "dependencies": {
     "@astrojs/rss": "^4.0.0",
