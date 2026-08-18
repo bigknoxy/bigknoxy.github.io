@@ -7,3 +7,6 @@ frozen-lockfile = false
 
 [run]
 runtime = "bun"
+
+[test]
+root = "tests/unit"
