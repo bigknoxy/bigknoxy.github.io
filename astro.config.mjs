@@ -34,7 +34,6 @@ export default defineConfig({
       rollupOptions: {
         input: {
           main: path.resolve("./src/pages/index.astro"),
-          "game-engine": path.resolve("./src/game/index.js"),
         },
         output: {
           entryFileNames: "assets/[name].js",
