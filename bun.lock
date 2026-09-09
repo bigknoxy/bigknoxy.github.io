@@ -5,24 +5,29 @@
     "": {
       "name": "bigknoxy-portfolio",
       "dependencies": {
-        "@astrojs/rss": "latest",
-        "@astrojs/tailwind": "latest",
-        "astro": "latest",
-        "astro-pagefind": "latest",
-        "pagefind": "latest",
-        "sharp": "latest",
-        "tailwindcss": "latest",
+        "@astrojs/rss": "^4.0.19",
+        "@astrojs/tailwind": "^6.0.2",
+        "astro": "^7.3.2",
+        "astro-pagefind": "^2.0.1",
+        "pagefind": "^1.5.2",
+        "sharp": "^0.35.4",
+        "tailwindcss": "^4.3.3",
       },
       "devDependencies": {
-        "@astrojs/check": "latest",
-        "@playwright/test": "latest",
-        "@tailwindcss/typography": "latest",
-        "@types/node": "latest",
-        "playwright": "latest",
-        "prettier": "latest",
-        "prettier-plugin-astro": "latest",
+        "@astrojs/check": "^0.9.10",
+        "@playwright/test": "^1.63.0",
+        "@tailwindcss/typography": "^0.5.20",
+        "@types/node": "^26.5.0",
+        "playwright": "^1.63.0",
+        "prettier": "^3.9.6",
+        "prettier-plugin-astro": "^1.0.0",
       },
     },
+  },
+  "overrides": {
+    "picomatch": ">=4.0.2",
+    "protobufjs": ">=7.6.1",
+    "sharp": ">=0.35.0",
   },
   "packages": {
     "@astrojs/check": ["@astrojs/check@0.9.10", "", { "dependencies": { "@astrojs/language-server": "^2.16.7", "chokidar": "^4.0.3", "kleur": "^4.1.5", "yargs": "^18.0.0" }, "peerDependencies": { "typescript": "^5.0.0 || ^6.0.0" }, "bin": { "astro-check": "./bin/astro-check.js" } }, "sha512-zgx/UQMozdjOa3bOxjgeCFdtpE3c9rRX6xHwa+2QXvy8z8Akifu2AtubHyv/zzC2znO8dl8fFWL4K+Ba9kS8HQ=="],
@@ -836,8 +841,6 @@
     "@shikijs/types/@types/hast": ["@types/hast@3.0.5", "", { "dependencies": { "@types/unist": "*" } }, "sha512-rp/ezSWaD1m44dPKICGhiskI13nVr7qTloFwDa/IYkhhf5nzwP+zIQcIJh3WIFSBOy/H1PzB40jPjMDksN4F+g=="],
 
     "@vscode/emmet-helper/jsonc-parser": ["jsonc-parser@2.3.1", "", {}, "sha512-H8jvkz1O50L3dMZCsLqiuB2tA7muqbSg1AtGEkN0leAqGjsUzDJir3Zwr02BhqdcITPg3ei3mZ+HjMocAknhhg=="],
-
-    "anymatch/picomatch": ["picomatch@2.3.1", "", {}, "sha512-JU3teHTNjmE2VCGFzuY8EXzCDVwEqB2a8fsIvwaStHhAWJEeVd1o1QD80CU6+ZdEXXSLbSsuLwJjkCBWqRQUVA=="],
 
     "cliui/string-width": ["string-width@7.2.0", "", { "dependencies": { "emoji-regex": "^10.3.0", "get-east-asian-width": "^1.0.0", "strip-ansi": "^7.1.0" } }, "sha512-tsaTIkKW9b4N+AEj+SVA+WhJzV7/zMhcSu78mLKWSk7cXMOSHsBKFWUs0fWwq8QyK3MgJBQRX6Gbi4kYbdvGkQ=="],
 
