@@ -24,7 +24,7 @@ Manual test steps (reproduce on a phone):
 Commands (tests & build):
 
 - Run unit tests: bun test
-- Run e2e (Playwright Chromium project): npx playwright test --project=chromium (also available via npm script: bun test:e2e)
+- Run e2e (Playwright): bunx playwright test (also available via script: bun run test:e2e)
 - Build production site: bun run build
 
 Relevant tests & files:

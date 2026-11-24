@@ -2,48 +2,32 @@ import { test, expect } from "@playwright/test";
 
 test.describe("SearchBar Component", () => {
   test.beforeEach(async ({ page }) => {
-    // Capture all console messages
-    page.on("console", (msg) => {
-      console.log("CONSOLE:", msg.type(), msg.text());
-    });
-
     await page.goto("/");
-    // Wait for page to fully load including scripts
     await page.waitForLoadState("networkidle");
-    await page.waitForTimeout(2000);
   });
 
   test('should show results for query "jeet"', async ({ page }) => {
     const searchInput = page.getByLabel("Search posts");
     await expect(searchInput).toBeVisible();
 
-    // Check if pagefind is loaded
-    const pagefindLoaded = await page.evaluate(() => {
-      return typeof (window as any).pagefind !== "undefined";
-    });
-    console.log("Pagefind loaded:", pagefindLoaded);
-
     await searchInput.fill("jeet");
 
-    // Wait for debounce and search results
-    await page.waitForTimeout(1000);
-
-    // Debug: check results container content
-    const resultsContent = await page.locator("#search-results").textContent();
-    console.log("Results content:", resultsContent);
-
-    // Check that results container is visible
     const resultsContainer = page.locator("#search-results");
     await expect(resultsContainer).toBeVisible();
 
-    // Check that results contain "jeet" related content
-    const results = page.locator('[role="listitem"]');
-    await expect(results).toHaveCount(1);
+    // The index fuzzy-matches "jeet" against several pages (e.g. "yeet"),
+    // so assert on presence and on the strongest hit rather than an exact count.
+    const listItems = resultsContainer.locator('[role="listitem"]');
+    await expect(listItems.first()).toBeVisible();
+    expect(await listItems.count()).toBeGreaterThanOrEqual(1);
 
-    const resultLink = page.locator('a[data-index="0"]');
-    await expect(resultLink).toBeVisible();
-    const title = await resultLink.locator("div").first().textContent();
-    expect(title?.toLowerCase()).toContain("projects");
+    // Top hit is the JeetSocial project post
+    const topResult = page.locator('a[data-index="0"]');
+    await expect(topResult).toBeVisible();
+    const href = await topResult.getAttribute("href");
+    expect(href).toContain("/projects/jeetsocial/");
+    const title = await topResult.locator("div").first().textContent();
+    expect(title?.toLowerCase()).toContain("jeetsocial");
   });
 
   test("should handle ArrowDown/ArrowUp navigation and Enter activation", async ({
@@ -51,51 +35,47 @@ test.describe("SearchBar Component", () => {
   }) => {
     const searchInput = page.getByLabel("Search posts");
     await searchInput.fill("jeet");
+    await page.locator('a[data-index="0"]').waitFor();
 
-    // Wait for results
-    await page.waitForTimeout(1000);
+    const resultsContainer = page.locator("#search-results");
+    const count = await resultsContainer.locator('[role="listitem"]').count();
+    expect(count).toBeGreaterThanOrEqual(2);
 
-    // ArrowDown should focus first result
+    // ArrowDown from the input focuses the first result
     await searchInput.press("ArrowDown");
     const firstResult = page.locator('a[data-index="0"]');
     await expect(firstResult).toBeFocused();
 
-    // ArrowDown again should stay on first result (only one result)
+    // ArrowDown moves to the next result
     await firstResult.press("ArrowDown");
-    await expect(firstResult).toBeFocused();
+    await expect(page.locator('a[data-index="1"]')).toBeFocused();
 
-    // ArrowUp should return to input
+    // ArrowUp walks back up to the input on the first result
+    const secondResult = page.locator('a[data-index="1"]');
+    await secondResult.press("ArrowUp");
+    await expect(firstResult).toBeFocused();
     await firstResult.press("ArrowUp");
     await expect(searchInput).toBeFocused();
 
-    // ArrowDown to focus result again
+    // Enter activates the focused anchor (href points at a real route)
+    await firstResult.press("ArrowUp"); // no-op, stays on input
     await searchInput.press("ArrowDown");
-    await expect(firstResult).toBeFocused();
-
-    // Enter should navigate (we'll check href exists)
     const href = await firstResult.getAttribute("href");
     expect(href).toBeTruthy();
-    expect(href).toContain("/projects/");
+    expect(href).toMatch(/^\//);
   });
 
   test("should clear results on Escape", async ({ page }) => {
     const searchInput = page.getByLabel("Search posts");
     await searchInput.fill("jeet");
+    await page.locator('a[data-index="0"]').waitFor();
 
-    // Wait for results
-    await page.waitForTimeout(1000);
-
-    // Verify results are visible
     const resultsContainer = page.locator("#search-results");
     await expect(resultsContainer).toBeVisible();
 
-    // Press Escape to clear
     await searchInput.press("Escape");
 
-    // Results should be hidden
     await expect(resultsContainer).toBeHidden();
-
-    // Input should be focused and cleared
     await expect(searchInput).toBeFocused();
     await expect(searchInput).toHaveValue("");
   });
@@ -103,7 +83,7 @@ test.describe("SearchBar Component", () => {
   test("should show fallback when pagefind.js returns 404", async ({
     page,
   }) => {
-    // Intercept pagefind.js request and make it fail
+    // Intercept before the page loads so pagefind never becomes available
     await page.route("**/pagefind/pagefind.js", (route) => {
       route.fulfill({
         status: 404,
@@ -111,44 +91,38 @@ test.describe("SearchBar Component", () => {
         body: "Not Found",
       });
     });
+    await page.goto("/");
+    await page.waitForLoadState("networkidle");
 
     const searchInput = page.getByLabel("Search posts");
     await searchInput.fill("test");
 
-    // Wait for error state
-    await page.waitForTimeout(1000);
-
     const resultsContainer = page.locator("#search-results");
-    await expect(resultsContainer).toBeVisible();
-
-    // Should show error message with reload button
     await expect(resultsContainer).toContainText(
       "Search unavailable — try reloading.",
     );
 
-    const reloadButton = page.locator("#search-reload");
-    await expect(reloadButton).toBeVisible();
+    await expect(page.locator("#search-reload")).toBeVisible();
   });
 
-  test('should show "Searching..." indicator during query', async ({
+  test('should show "searching..." indicator during query', async ({
     page,
   }) => {
-    const searchInput = page.getByLabel("Search posts");
-
-    // Slow down the search response to see the loading state
+    // Delay pagefind requests so the loading state is observable
     await page.route("**/pagefind/**", (route) => {
-      setTimeout(() => route.continue(), 200);
+      setTimeout(() => route.continue(), 150);
     });
 
+    const searchInput = page.getByLabel("Search posts");
     await searchInput.fill("jeet");
 
-    // Should show searching state immediately
     const resultsContainer = page.locator("#search-results");
-    await expect(resultsContainer).toContainText("Searching...");
+    await expect(resultsContainer).toContainText("searching...");
 
-    // Wait for results to replace searching state
-    await page.waitForTimeout(500);
-    await expect(resultsContainer).not.toContainText("Searching...");
+    // Results eventually replace the loading state
+    await expect(resultsContainer).toContainText(/jeetsocial/i, {
+      timeout: 15000,
+    });
   });
 
   test("should have proper accessibility attributes", async ({ page }) => {
@@ -156,17 +130,17 @@ test.describe("SearchBar Component", () => {
     await expect(searchInput).toHaveAttribute("aria-label", "Search posts");
 
     await searchInput.fill("jeet");
-    await page.waitForTimeout(1000);
+    await page.locator('a[data-index="0"]').waitFor();
 
     const resultsContainer = page.locator("#search-results");
     await expect(resultsContainer).toHaveAttribute("aria-live", "polite");
 
-    const list = page.locator('[role="list"]');
+    const list = resultsContainer.locator('[role="list"]');
     await expect(list).toBeVisible();
     await expect(list).toHaveAttribute("aria-label", "Search results");
 
-    const listItems = page.locator('[role="listitem"]');
-    await expect(listItems).toHaveCount(1);
+    const listItems = resultsContainer.locator('[role="listitem"]');
+    expect(await listItems.count()).toBeGreaterThanOrEqual(1);
   });
 
   test("should not search for queries shorter than 2 characters", async ({
@@ -175,10 +149,9 @@ test.describe("SearchBar Component", () => {
     const searchInput = page.getByLabel("Search posts");
     await searchInput.fill("j");
 
-    // Wait for debounce
+    // Wait past the debounce window
     await page.waitForTimeout(500);
 
-    // Results should remain hidden
     const resultsContainer = page.locator("#search-results");
     await expect(resultsContainer).toBeHidden();
   });
@@ -186,17 +159,13 @@ test.describe("SearchBar Component", () => {
   test("should hide results when clicking outside", async ({ page }) => {
     const searchInput = page.getByLabel("Search posts");
     await searchInput.fill("jeet");
-
-    // Wait for results
-    await page.waitForTimeout(1000);
+    await page.locator('a[data-index="0"]').waitFor();
 
     const resultsContainer = page.locator("#search-results");
     await expect(resultsContainer).toBeVisible();
 
-    // Click outside the search component
     await page.click("body", { position: { x: 10, y: 10 } });
 
-    // Results should be hidden
     await expect(resultsContainer).toBeHidden();
   });
 });

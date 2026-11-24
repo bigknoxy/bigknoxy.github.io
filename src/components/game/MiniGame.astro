@@ -58,7 +58,10 @@ import TerminalBar from '@/components/layout/TerminalBar.astro';
 
   canvas.width  = W;
   canvas.height = H;
-  const ctx = canvas.getContext('2d');
+  // canvas is guaranteed non-null above; getContext('2d') only fails on
+  // non-2D contexts, which this element can never be. The assertion keeps
+  // the hoisted draw functions below from seeing a nullable type.
+  const ctx = canvas.getContext('2d')!;
   if (!ctx) return;
   ctx.imageSmoothingEnabled = false;
 
@@ -240,7 +243,6 @@ import TerminalBar from '@/components/layout/TerminalBar.astro';
     x: number; y: number;
   }
   const collectibles: Collectible[] = [];
-  let collectTimer = 0;
   const COLLECT_INTERVAL_MIN = 180;
   const COLLECT_INTERVAL_RANGE = 120;
 
@@ -320,7 +322,6 @@ import TerminalBar from '@/components/layout/TerminalBar.astro';
     groundOffset = 0;
     blinkTimer = 0;
     blinkOn = true;
-    collectTimer = 0;
   }
 
   // ─── Input ────────────────────────────────────────────────────────────────

@@ -1,73 +1,57 @@
-# 🎮 AGENTS.md - GameBoy/Tokyo Night Portfolio
+# 🎮 AGENTS.md — Phosphor Terminal Portfolio
 
-## 🤖 DELEGATE OR DIE! 
-**YOU ARE NOT THE EXPERT. DELEGATE EVERYTHING.** 
-- **NEVER** write code yourself - use the `task` tool with appropriate subagent
-- **ALWAYS** start with Project Manager for complex tasks
-- **ALWAYS** scan `./memory/` first before any task
-- **ONLY** act when explicitly told to do something directly
-- **FAILURE** to delegate properly will result in broken code and wasted time
+Astro + Bun + Tailwind static portfolio. Theme: phosphor-green terminal
+aesthetic (Press Start 2P for pixel elements, JetBrains Mono for code).
 
-## 🤖 Agent Delegation - USE THESE FOR EVERYTHING
-- **Project Manager:** Task coordination, workflow management, delegation (USE THIS FIRST)
-- **Architect:** System design, tech choices, architecture decisions
-- **Developer:** Feature implementation, bug fixes, code logic  
-- **UI Engineer:** Component styling, interactions, accessibility
-- **Test Engineer:** Test authoring, coverage, quality assurance
-- **Documentation:** Docs, README updates, API references
-- **DevOps Engineer:** GitHub Actions, GitHub Pages, deployment optimization
-- **Game Developer:** Web Audio API, Canvas rendering, 8-bit game development
+## 🧠 Memory Protocol (do this first)
 
-**Examples:**
-- `task(description="Coordinate project setup", prompt="Analyze requirements and delegate Astro project initialization to appropriate agents", subagent_type="project-manager")`
-- `task(description="Build portfolio layout", prompt="Create responsive GameBoy-styled portfolio with Tokyo Night theme", subagent_type="ui-engineer")`
-- `task(description="Fix build error", prompt="Debug and resolve Astro build failure", subagent_type="developer")`
-- `task(description="Add search functionality", prompt="Implement Pagefind search with custom UI", subagent_type="developer")`
-- `task(description="Update README", prompt="Document new features and installation steps", subagent_type="documentation")`
-- `task(description="Setup GitHub Pages", prompt="Configure username.github.io deployment with GitHub Actions", subagent_type="devops")`
-- `task(description="Create mini game", prompt="Build Code Runner game with Web Audio API and Canvas", subagent_type="game-developer")`
+- **Read** `./memory/` before any task — it records prior decisions
+  (Context ➡️ Decision ➡️ Outcome). `memory/README.md` has the index.
+- **Write** a new `memory/NNN-topic.md` whenever you solve a tricky bug,
+  make an architectural pivot, or lock in a tech-stack decision.
 
 ## 🚀 Commands
-- `bun run dev` - Start dev server
-- `bun run build` - Build for production  
-- `bun run preview` - Preview production build
-- `bun run lint` - Format with Prettier
-- `bun run typecheck` - Astro type checking
-- `bun test` - Run tests (if any)
-- `bun test <path>` - Run single test
 
-## 🎨 Code Style
-- **Runtime:** Bun-first, use `bunx` for package scripts
-- **Framework:** Astro + TypeScript + Tailwind CSS
-- **Imports:** Astro imports first, then third-party, then local
-- **Components:** `.astro` files, PascalCase naming
-- **Styles:** Tailwind classes only, no custom CSS unless necessary
-- **Images:** Use Astro `<Image>` component with optimization
-- **Typography:** Press Start 2P for GameBoy elements, JetBrains Mono for code
+```bash
+bun run dev          # dev server
+bun run build        # production build (also generates the pagefind index)
+bun run preview      # preview production build on :4321
+bun run lint         # format with Prettier
+bun run typecheck    # Astro type checking
+bun test             # unit tests (Bun test runner, tests/unit)
+bunx playwright test # e2e tests (auto-starts preview on :4321)
+```
 
-## 🎯 Theme Guidelines
-- **Colors:** Use `gameboy-*` and `tokyo-*` palette from tailwind.config.js
-- **Aesthetic:** GameBoy LCD + Tokyo Night fusion
-- **Fonts:** Pixel fonts for game elements, mono for code
-- **Interactive:** Add hover states, transitions, 8-bit sound effects
+There is a single build pipeline (Astro). Do **not** reintroduce a separate
+Vite/game build — the homepage game is inline (see below).
 
+## 🎨 Theme & code style
 
-## ⚡ Performance Rules
-- Static generation优先
-- Optimize images with WebP/AVIF
-- Lazy load non-critical components
-- Use Bun runtime for speed
-- Minimize JavaScript bundle size
+- Tailwind classes only; custom CSS only when there's no Tailwind equivalent.
+- Colors come from the `phosphor-*` theme tokens.
+- Pixel text: Press Start 2P (`.font-pixel`). Body/code: JetBrains Mono.
+- Components are `.astro`, PascalCase, in `src/components/`.
+- Interactive elements get hover/focus states.
 
-## 📚 DOCUMENTATION MANDATE
-**ALWAYS** delegate to Documentation agent after ANY task completion:
-- `task(description="Update docs", prompt="Update README/API docs for recent changes", subagent_type="documentation")`
-- **NO EXCEPTIONS** - Documentation updates are non-negotiable
-- **MANDATORY** for all feature implementations, bug fixes, architectural changes
+## 🕹️ The homepage game (Terminal Runner)
 
-## 🧠 Memory Protocol (Context Retention)
-*   **Never Forget:** History matters. Don't repeat mistakes or re-litigate decisions.
-*   **Write:** When you solve a tricky bug, make an architectural pivot, or lock in a tech stack decision:
-    *   Create a concise file in `./memory/` (e.g., `001-auth-pattern.md`, `002-fix-race-condition.md`).
-    *   **Format:** Context ➡️ Decision ➡️ Outcome.
-*   **Read:** Start **EVERY** task by scanning `./memory/` for relevant context.
+- Lives entirely in `src/components/game/MiniGame.astro` — a self-contained
+  canvas game, **no external bundle, no dependencies, no Web Audio**.
+- It exposes **no test API** by design. Browser tests
+  (`tests/e2e/terminal-runner.spec.ts`) drive it with real inputs (Space,
+  click) and assert via `localStorage['termRunHS']` and
+  `#tr-hiscore-display`.
+- The old external engine (`src/game/`, `vite.game.config.js`,
+  `build:game`) was removed — see `memory/017-game-legacy-cleanup.md` and
+  `src/content/blog/terminal-runner-rewrite.md`. Do not resurrect it.
+
+## 📚 Documentation
+
+Keep `README.md` in sync with the codebase: every change that affects the
+public surface (commands, architecture, the game, search) must update the
+README in the same change.
+
+## ⚡ Performance rules
+
+- Static generation; optimize images (WebP/AVIF) where possible.
+- Lazy-load non-critical assets; keep the JS bundle small.
